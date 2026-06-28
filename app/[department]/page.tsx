@@ -1,0 +1,85 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { departments, findDepartment } from "@/config/navigation";
+import {
+  getProductsByDepartment,
+  getProductsByCategory,
+} from "@/lib/catalog";
+import { PageHeading } from "@/components/layout/PageHeading";
+import { ProductGrid } from "@/components/product/ProductGrid";
+
+type Params = { department: string };
+
+/** Pre-render the known departments. */
+export function generateStaticParams() {
+  return departments.map((d) => ({ department: d.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { department } = await params;
+  const dept = findDepartment(department);
+  return { title: dept?.label ?? "Departamento" };
+}
+
+export default async function DepartmentPage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
+  const { department } = await params;
+  const dept = findDepartment(department);
+  if (!dept) notFound();
+
+  const all = await getProductsByDepartment(department);
+
+  // One section per category, each with its products. The heading links to
+  // the dedicated category page.
+  const sections = await Promise.all(
+    (dept.children ?? []).map(async (cat) => ({
+      category: cat,
+      products: await getProductsByCategory(department, cat.slug),
+    })),
+  );
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+      <PageHeading
+        title={dept.label}
+        subtitle={`Explora todo nuestro surtido de ${dept.label.toLowerCase()}.`}
+      />
+
+      {all.length === 0 ? (
+        <ProductGrid products={[]} />
+      ) : (
+        <div className="space-y-14">
+          {sections.map(({ category, products }) => (
+            <section key={category.slug}>
+              <div className="mb-5 flex items-baseline justify-between gap-4">
+                <h2 className="font-display text-xl text-ink sm:text-2xl">
+                  <Link
+                    href={category.href}
+                    className="transition-colors hover:text-green-dark"
+                  >
+                    {category.label}
+                  </Link>
+                </h2>
+                <Link
+                  href={category.href}
+                  className="shrink-0 font-meta text-sm text-ink-soft transition-colors hover:text-green-dark"
+                >
+                  Ver todo
+                </Link>
+              </div>
+              <ProductGrid products={products} />
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

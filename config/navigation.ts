@@ -91,3 +91,35 @@ export function flattenNav(nodes: NavNode[] = departments): NavNode[] {
     ...(node.children ? flattenNav(node.children) : []),
   ]);
 }
+
+/* ==========================================================================
+   Lookup helpers — used by catalog pages to resolve a slug path into nodes
+   (for titles + breadcrumbs) and to 404 on invalid slugs. Reading from the
+   same tree keeps navigation the single source of truth.
+   ========================================================================== */
+
+/** Find a top-level department by slug. */
+export function findDepartment(slug: string): NavNode | undefined {
+  return departments.find((d) => d.slug === slug);
+}
+
+/** Find a category within a department. */
+export function findCategory(
+  departmentSlug: string,
+  categorySlug: string,
+): NavNode | undefined {
+  return findDepartment(departmentSlug)?.children?.find(
+    (c) => c.slug === categorySlug,
+  );
+}
+
+/** Find a subcategory within a department + category. */
+export function findSubcategory(
+  departmentSlug: string,
+  categorySlug: string,
+  subcategorySlug: string,
+): NavNode | undefined {
+  return findCategory(departmentSlug, categorySlug)?.children?.find(
+    (s) => s.slug === subcategorySlug,
+  );
+}

@@ -2,30 +2,41 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/Button";
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { ProductImage } from "@/components/product/ProductImage";
 import { CloseIcon } from "@/components/ui/icons";
+import { formatCOP } from "@/lib/money";
 import { cn } from "@/lib/cn";
 
 /**
  * Slide-in cart drawer (from the right).
  *
- * Phase 1: empty state only — coconut character, an empty message and a
- * disabled "Cotizar por WhatsApp" action. Cart line items render here in a
- * later phase (the structure is already in place via CartContext).
+ * Shows line items (thumbnail, name, presentation, quantity stepper, line
+ * total, remove) and the subtotal. The "Cotizar por WhatsApp" button is kept
+ * visible but disabled — WhatsApp message generation arrives in the next phase.
  *
  * Accessibility: dialog role, focus moved to the close button on open,
  * closes on overlay click, the close button, and Escape.
  */
 export function CartDrawer() {
-  const { isOpen, closeCart, items, itemCount } = useCart();
+  const {
+    isOpen,
+    closeCart,
+    items,
+    itemCount,
+    subtotal,
+    updateQuantity,
+    removeItem,
+  } = useCart();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCart();
     document.addEventListener("keydown", onKey);
-    // Move focus into the drawer and lock body scroll.
     closeButtonRef.current?.focus();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -97,24 +108,91 @@ export function CartDrawer() {
               </p>
             </div>
           ) : (
-            // Line items will be rendered here in Phase 2.
-            <ul className="space-y-4" />
+            <ul className="space-y-5">
+              {items.map(({ product, quantity }) => (
+                <li key={product.code} className="flex gap-3">
+                  {/* Thumbnail (links to product page) */}
+                  <Link
+                    href={`/producto/${product.slug}`}
+                    onClick={closeCart}
+                    className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
+                  >
+                    <ProductImage
+                      src={product.image}
+                      alt={product.name}
+                      sizes="80px"
+                    />
+                  </Link>
+
+                  {/* Details */}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        href={`/producto/${product.slug}`}
+                        onClick={closeCart}
+                        className="text-sm text-ink transition-colors hover:text-green-dark"
+                      >
+                        {product.name}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(product.code)}
+                        aria-label={`Quitar ${product.name} del carrito`}
+                        className="shrink-0 rounded p-1 text-ink-soft transition-colors hover:text-pink-dark"
+                      >
+                        <CloseIcon width={16} height={16} />
+                      </button>
+                    </div>
+
+                    {product.presentation && (
+                      <p className="font-meta text-xs text-ink-soft">
+                        {product.presentation}
+                      </p>
+                    )}
+
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <QuantityStepper
+                        value={quantity}
+                        min={1}
+                        max={product.stock}
+                        size="sm"
+                        onChange={(next) =>
+                          updateQuantity(product.code, next)
+                        }
+                        label={`Cantidad de ${product.name}`}
+                      />
+                      <span className="text-sm font-medium text-ink">
+                        {formatCOP(product.price * quantity)}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
         {/* Footer / checkout */}
         <div className="border-t border-line px-5 py-4">
+          {!isEmpty && (
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm text-ink-soft">Subtotal</span>
+              <span className="text-lg font-medium text-ink">
+                {formatCOP(subtotal)}
+              </span>
+            </div>
+          )}
           <Button
             variant="primary"
             size="lg"
             className="w-full"
             disabled
-            title="Disponible próximamente"
+            title="Disponible en el siguiente paso"
           >
             Cotizar por WhatsApp
           </Button>
           <p className="mt-2 text-center font-meta text-xs text-ink-soft">
-            El pago y la cotización por WhatsApp se habilitarán pronto.
+            La cotización por WhatsApp se habilitará en el siguiente paso.
           </p>
         </div>
       </aside>

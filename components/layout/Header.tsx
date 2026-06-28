@@ -21,7 +21,8 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
+    <>
+      <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Left: hamburger (mobile) + logo */}
         <div className="flex items-center gap-2">
@@ -92,8 +93,16 @@ export function Header() {
           </button>
         </div>
       </div>
+      </header>
 
+      {/*
+        Rendered OUTSIDE <header> on purpose: the header uses backdrop-blur
+        (backdrop-filter), which makes it the containing block for any
+        position:fixed descendant. Keeping the slide-in menu here ensures its
+        `fixed inset-0` resolves against the viewport, so the panel is full
+        viewport height instead of being clipped to the header's height.
+      */}
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
-    </header>
+    </>
   );
 }

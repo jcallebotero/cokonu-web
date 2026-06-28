@@ -1,0 +1,70 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { departments, findCategory } from "@/config/navigation";
+import { getProductsByCategory } from "@/lib/catalog";
+import { PageHeading } from "@/components/layout/PageHeading";
+import { ProductGrid } from "@/components/product/ProductGrid";
+import { SubcategoryFilter } from "@/components/product/SubcategoryFilter";
+
+type Params = { department: string; category: string };
+
+/** Pre-render the known department/category pairs. */
+export function generateStaticParams() {
+  return departments.flatMap((d) =>
+    (d.children ?? []).map((c) => ({
+      department: d.slug,
+      category: c.slug,
+    })),
+  );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { department, category } = await params;
+  const cat = findCategory(department, category);
+  return { title: cat?.label ?? "Categoría" };
+}
+
+export default async function CategoryPage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
+  const { department, category } = await params;
+  const cat = findCategory(department, category);
+  if (!cat) notFound();
+
+  const products = await getProductsByCategory(department, category);
+  const subcategories = cat.children ?? [];
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+      {/* Breadcrumb to the parent department */}
+      <nav aria-label="Ruta de navegación" className="mb-4">
+        <Link
+          href={`/${department}`}
+          className="font-meta text-sm text-ink-soft transition-colors hover:text-green-dark"
+        >
+          ← {findDepartmentLabel(department)}
+        </Link>
+      </nav>
+
+      <PageHeading title={cat.label} />
+
+      {subcategories.length > 0 ? (
+        <SubcategoryFilter products={products} subcategories={subcategories} />
+      ) : (
+        <ProductGrid products={products} />
+      )}
+    </div>
+  );
+}
+
+/** Small local helper to label the breadcrumb from the nav tree. */
+function findDepartmentLabel(slug: string): string {
+  return departments.find((d) => d.slug === slug)?.label ?? "Inicio";
+}

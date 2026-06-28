@@ -2,13 +2,16 @@ import Link from "next/link";
 import { departments } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/Button";
+import { getFeaturedProducts } from "@/lib/catalog";
+import { ProductGrid } from "@/components/product/ProductGrid";
 
 /**
- * Home page — PLACEHOLDER (Phase 1).
- * Verifies the design system, fonts, colors, header, footer and cart drawer
- * render and breathe well. No products yet.
+ * Home page: hero + a "Destacados" grid of featured products read through the
+ * catalog data-access layer.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const featured = await getFeaturedProducts();
+
   return (
     <>
       {/* Hero */}
@@ -54,15 +57,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/*
-        category highlights — to be built in Phase 2
-        (curated product grids per department / category)
-      */}
+      {/* Featured products */}
       <section
-        aria-label="Categorías destacadas"
-        className="mx-auto max-w-6xl px-6 py-16"
+        aria-label="Productos destacados"
+        className="mx-auto max-w-6xl px-4 py-16 sm:px-6"
       >
-        {/* Intentionally empty for Phase 1. */}
+        <div className="mb-8 flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl text-ink sm:text-3xl">
+            Destacados
+          </h2>
+        </div>
+        <ProductGrid products={featured} />
       </section>
     </>
   );
