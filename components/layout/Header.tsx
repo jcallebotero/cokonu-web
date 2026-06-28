@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { departments } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/CartContext";
 import { DepartmentMenu } from "@/components/layout/DepartmentMenu";
 import { MobileMenu } from "@/components/layout/MobileMenu";
@@ -92,13 +91,6 @@ export function Header() {
             </span>
           </button>
         </div>
-      </div>
-
-      {/* Tagline strip — subtle brand presence */}
-      <div className="hidden border-t border-line/60 bg-surface/40 sm:block">
-        <p className="mx-auto max-w-6xl px-6 py-1.5 text-center font-meta text-xs tracking-wide text-ink-soft">
-          {siteConfig.tagline} · {siteConfig.location}
-        </p>
       </div>
 
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />

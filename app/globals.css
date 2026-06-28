@@ -10,7 +10,7 @@
    ========================================================================== */
 @theme {
   /* ---- Brand colors ---- */
-  --color-bg: #fafff5; /* off-white page background */
+  --color-bg: #ffffff; /* page background — pure white so product photos (light-green) stand out */
   --color-surface: #ffffff; /* cards, drawers, panels */
   --color-ink: #1a1a1a; /* primary text + primary button */
   --color-ink-soft: #5c5c5c; /* muted / secondary text */

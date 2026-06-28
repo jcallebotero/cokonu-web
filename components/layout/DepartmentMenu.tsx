@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import type { NavNode } from "@/config/navigation";
 import { ChevronDownIcon } from "@/components/ui/icons";
@@ -19,12 +19,36 @@ import { cn } from "@/lib/cn";
 export function DepartmentMenu({ department }: { department: NavNode }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLLIElement>(null);
+  // Short close-delay so the cursor can travel from the trigger into the
+  // panel (across the small gap below the trigger) without the menu flickering
+  // closed. Re-entering cancels the pending close.
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelId = useId();
 
   const isPapeleria = department.slug === "papeleria";
   const accentText = isPapeleria
     ? "hover:text-pink-dark"
     : "hover:text-green-dark";
+
+  function cancelClose() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+  function handleEnter() {
+    cancelClose();
+    setOpen(true);
+  }
+
+  function handleLeave() {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  // Clean up any pending timer on unmount.
+  useEffect(() => cancelClose, []);
 
   // Close when focus moves outside the whole group (keyboard navigation).
   function handleBlur(event: React.FocusEvent<HTMLLIElement>) {
@@ -37,9 +61,9 @@ export function DepartmentMenu({ department }: { department: NavNode }) {
     <li
       ref={wrapperRef}
       className="static"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onFocus={handleEnter}
       onBlur={handleBlur}
       onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
     >
