@@ -13,18 +13,32 @@ import type { Product } from "@/types/product";
  *  - Out of stock → "Agotado" message; stepper + button hidden.
  *  - Low stock (≤ 5) → a subtle "¡Últimas unidades!" hint.
  */
+/** Soft cap used when stock is unknown (null). */
+const SOFT_MAX = 99;
+
 export function ProductPurchase({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
 
-  const outOfStock = product.stock <= 0;
-  const lowStock = !outOfStock && product.stock <= 5;
+  const hasPrice = product.price !== null;
+  const stockKnown = product.stock !== null;
+  const outOfStock = stockKnown && (product.stock as number) <= 0;
+  const lowStock =
+    stockKnown && (product.stock as number) > 0 && (product.stock as number) <= 5;
+  // No cap when inventory is unknown; otherwise cap at stock.
+  const maxQty = stockKnown ? (product.stock as number) : SOFT_MAX;
 
   return (
     <div className="space-y-5">
-      <p className="text-2xl font-medium text-ink">
-        {formatCOP(product.price)}
-      </p>
+      {hasPrice ? (
+        <p className="text-2xl font-medium text-ink">
+          {formatCOP(product.price as number)}
+        </p>
+      ) : (
+        <p className="font-meta text-sm text-ink-soft">
+          Consultar precio por WhatsApp
+        </p>
+      )}
 
       {outOfStock ? (
         <p className="inline-flex rounded-full bg-line px-3 py-1 text-sm font-medium text-ink-soft">
@@ -42,7 +56,7 @@ export function ProductPurchase({ product }: { product: Product }) {
             <QuantityStepper
               value={qty}
               min={1}
-              max={product.stock}
+              max={maxQty}
               onChange={setQty}
             />
             <Button

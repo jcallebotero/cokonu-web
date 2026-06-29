@@ -57,18 +57,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured products */}
-      <section
-        aria-label="Productos destacados"
-        className="mx-auto max-w-6xl px-4 py-16 sm:px-6"
-      >
-        <div className="mb-8 flex items-baseline justify-between gap-4">
-          <h2 className="font-display text-2xl text-ink sm:text-3xl">
-            Destacados
-          </h2>
-        </div>
-        <ProductGrid products={featured} />
-      </section>
+      {/* Featured products — section hides itself cleanly when there are none. */}
+      {featured.length > 0 && (
+        <section
+          aria-label="Productos destacados"
+          className="mx-auto max-w-6xl px-4 py-16 sm:px-6"
+        >
+          <div className="mb-8 flex items-baseline justify-between gap-4">
+            <h2 className="font-display text-2xl text-ink sm:text-3xl">
+              Destacados
+            </h2>
+          </div>
+          <ProductGrid products={featured} />
+        </section>
+      )}
     </>
   );
 }

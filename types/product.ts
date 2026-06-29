@@ -2,8 +2,8 @@
  * Product domain model.
  *
  * Designed to be forward-compatible with a future Google Sheets source: each
- * field maps to a column, so swapping the mock array (data/products.ts) for a
- * fetched Sheets JSON only touches the data-access layer (lib/catalog.ts).
+ * field maps to a column, so swapping the local JSON (data/chocolatinas.json)
+ * for a fetched Sheets JSON only touches the data-access layer (lib/catalog.ts).
  */
 
 /** Department slugs — must match the top-level slugs in config/navigation.ts. */
@@ -22,12 +22,21 @@ export interface Product {
   category: string;
   /** Subcategory slug (e.g. "gomas") or null when the category has none. */
   subcategory: string | null;
-  /** Price in COP, integer pesos (no decimals). */
-  price: number;
-  /** Available quantity; 0 means out of stock. */
-  stock: number;
-  /** Image path under /public, e.g. "/products/gomas-trolli.jpg". */
-  image: string;
+  /**
+   * Price in COP, integer pesos (no decimals), or null when not yet loaded
+   * from the legacy system. Null price → no price shown anywhere.
+   */
+  price: number | null;
+  /**
+   * Available quantity (0 = out of stock), or null when inventory is unknown.
+   * Null stock → treated as available with no quantity cap and never "Agotado".
+   */
+  stock: number | null;
+  /**
+   * @deprecated Images are derived from `code` via lib/productImage.ts.
+   * Kept optional and unused for backward compatibility / future overrides.
+   */
+  image?: string;
   /** Presentation, e.g. "Bolsa 100 g", "Unidad", "Paquete x 18". */
   presentation: string | null;
   /** Longer description (es-CO) or null. */

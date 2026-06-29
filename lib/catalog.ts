@@ -1,24 +1,48 @@
-import { products } from "@/data/products";
+import chocolatinasData from "@/data/chocolatinas.json";
 import type { DepartmentSlug, Product } from "@/types/product";
+
+/**
+ * Map the raw JSON rows into typed Products.
+ *
+ * `code` is kept as a STRING exactly as authored (leading zeros like "0006"
+ * are significant — they must match the photo filenames), and is never coerced
+ * to a number. JSON imports widen `department` to `string`, so it is narrowed
+ * to DepartmentSlug here.
+ */
+const catalog: Product[] = (chocolatinasData as Array<Omit<Product, "department"> & { department: string }>).map(
+  (row) => ({
+    code: row.code,
+    slug: row.slug,
+    name: row.name,
+    department: row.department as DepartmentSlug,
+    category: row.category,
+    subcategory: row.subcategory,
+    price: row.price,
+    stock: row.stock,
+    presentation: row.presentation,
+    description: row.description,
+    featured: row.featured,
+  }),
+);
 
 /**
  * DATA-ACCESS LAYER for the product catalog.
  *
  * Every page/component reads products through THIS module — never by importing
- * data/products.ts directly. That isolation is the whole point: when we move
- * from the mock array to a Google Sheets JSON source, only `getSource()` below
+ * the JSON/data files directly. That isolation is the whole point: when we move
+ * from the local JSON to a Google Sheets JSON source, only `getSource()` below
  * changes (e.g. `await fetch(SHEET_URL).then(r => r.json())`). The public
  * functions are already async, so their signatures — and every caller — stay
  * exactly the same.
  */
 
 /**
- * The single seam to swap later. Today it returns the local mock array;
- * tomorrow it fetches + maps the Sheets rows into Product[]. Keep it the only
- * place that knows where products come from.
+ * The single seam to swap later. Today it returns the products loaded from
+ * data/chocolatinas.json; tomorrow it fetches + maps the Sheets rows into
+ * Product[]. Keep it the only place that knows where products come from.
  */
 async function getSource(): Promise<Product[]> {
-  return products;
+  return catalog;
 }
 
 /** All products. */

@@ -18,14 +18,16 @@ import type { Product } from "@/types/product";
  */
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
-  const outOfStock = product.stock <= 0;
+  // Null stock = unknown inventory → always available, never "Agotado".
+  const outOfStock = product.stock !== null && product.stock <= 0;
+  const hasPrice = product.price !== null;
 
   return (
     <article className="group relative flex flex-col">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface ring-1 ring-line/60">
         <ProductImage
-          src={product.image}
+          code={product.code}
           alt={product.name}
           className="transition-transform duration-300 group-hover:scale-105"
         />
@@ -56,9 +58,15 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-ink">
-            {formatCOP(product.price)}
-          </span>
+          {hasPrice ? (
+            <span className="text-sm font-medium text-ink">
+              {formatCOP(product.price as number)}
+            </span>
+          ) : (
+            <span className="font-meta text-xs text-ink-soft">
+              Consultar por WhatsApp
+            </span>
+          )}
 
           {/* z-10 lifts the button above the stretched link's ::after. */}
           <button

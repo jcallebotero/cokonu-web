@@ -32,8 +32,11 @@ interface CartContextValue {
   items: CartLine[];
   /** Total number of units across all line items. */
   itemCount: number;
-  /** Subtotal in COP. */
-  subtotal: number;
+  /**
+   * Subtotal in COP, or null when it cannot be computed because at least one
+   * item has no price yet (price === null).
+   */
+  subtotal: number | null;
   /** Whether the slide-in cart drawer is open. */
   isOpen: boolean;
   /** Add `qty` units of a product (clamped to stock). No-op if out of stock. */
@@ -103,16 +106,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (product: Product, qty = 1) => {
-      if (product.stock <= 0 || qty <= 0) return; // out of stock → no-op
+      if (qty <= 0) return;
+      // Out of stock → no-op. Null stock = unknown inventory → allowed.
+      if (product.stock !== null && product.stock <= 0) return;
+      // No quantity cap when stock is unknown (null).
+      const cap = product.stock === null ? Infinity : product.stock;
       setItems((prev) => {
         const existing = prev.find((l) => l.product.code === product.code);
         if (existing) {
-          const nextQty = Math.min(existing.quantity + qty, product.stock);
+          const nextQty = Math.min(existing.quantity + qty, cap);
           return prev.map((l) =>
             l.product.code === product.code ? { ...l, quantity: nextQty } : l,
           );
         }
-        return [...prev, { product, quantity: Math.min(qty, product.stock) }];
+        return [...prev, { product, quantity: Math.min(qty, cap) }];
       });
       setIsOpen(true); // open the drawer as feedback
     },
@@ -127,7 +134,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) =>
       prev.flatMap((l) => {
         if (l.product.code !== code) return [l];
-        const clamped = Math.max(0, Math.min(qty, l.product.stock));
+        const cap = l.product.stock === null ? Infinity : l.product.stock;
+        const clamped = Math.max(0, Math.min(qty, cap));
         return clamped === 0 ? [] : [{ ...l, quantity: clamped }];
       }),
     );
@@ -137,10 +145,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = items.reduce((sum, l) => sum + l.quantity, 0);
-    const subtotal = items.reduce(
-      (sum, l) => sum + l.product.price * l.quantity,
-      0,
-    );
+    // Subtotal is computable only if every item has a price; otherwise null.
+    const anyUnpriced = items.some((l) => l.product.price === null);
+    const subtotal = anyUnpriced
+      ? null
+      : items.reduce((sum, l) => sum + (l.product.price as number) * l.quantity, 0);
     return {
       items,
       itemCount,

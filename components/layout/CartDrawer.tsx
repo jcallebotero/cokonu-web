@@ -118,7 +118,7 @@ export function CartDrawer() {
                     className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
                   >
                     <ProductImage
-                      src={product.image}
+                      code={product.code}
                       alt={product.name}
                       sizes="80px"
                     />
@@ -154,16 +154,18 @@ export function CartDrawer() {
                       <QuantityStepper
                         value={quantity}
                         min={1}
-                        max={product.stock}
+                        max={product.stock === null ? 99 : product.stock}
                         size="sm"
                         onChange={(next) =>
                           updateQuantity(product.code, next)
                         }
                         label={`Cantidad de ${product.name}`}
                       />
-                      <span className="text-sm font-medium text-ink">
-                        {formatCOP(product.price * quantity)}
-                      </span>
+                      {product.price !== null && (
+                        <span className="text-sm font-medium text-ink">
+                          {formatCOP(product.price * quantity)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -177,9 +179,15 @@ export function CartDrawer() {
           {!isEmpty && (
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm text-ink-soft">Subtotal</span>
-              <span className="text-lg font-medium text-ink">
-                {formatCOP(subtotal)}
-              </span>
+              {subtotal !== null ? (
+                <span className="text-lg font-medium text-ink">
+                  {formatCOP(subtotal)}
+                </span>
+              ) : (
+                <span className="font-meta text-sm text-ink-soft">
+                  Por confirmar
+                </span>
+              )}
             </div>
           )}
           <Button

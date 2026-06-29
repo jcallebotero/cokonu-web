@@ -3,23 +3,25 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import { productImageSrc } from "@/lib/productImage";
 
 /**
- * Product image with a graceful fallback. If the file is missing (onError),
- * it shows a neutral on-brand placeholder (faint coconut on green-tint) so a
- * missing photo never breaks the grid layout.
+ * Product image. The source is DERIVED from the product `code`
+ * (lib/productImage.ts) — never a stored path. If the file is missing
+ * (onError), it shows a neutral on-brand placeholder (faint coconut on
+ * green-tint) so a not-yet-uploaded photo never breaks the grid layout.
  *
  * Must be placed inside a positioned container with a defined size
  * (e.g. `relative aspect-square`) because it renders with `fill`.
  */
 export function ProductImage({
-  src,
+  code,
   alt,
   sizes,
   priority,
   className,
 }: {
-  src: string;
+  code: string;
   alt: string;
   sizes?: string;
   priority?: boolean;
@@ -46,7 +48,7 @@ export function ProductImage({
 
   return (
     <Image
-      src={src}
+      src={productImageSrc(code)}
       alt={alt}
       fill
       sizes={sizes ?? "(max-width: 768px) 50vw, 25vw"}

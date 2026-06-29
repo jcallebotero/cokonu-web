@@ -54,10 +54,16 @@ export default async function DepartmentPage({
       />
 
       {all.length === 0 ? (
+        // Whole department empty → friendly empty state.
         <ProductGrid products={[]} />
       ) : (
         <div className="space-y-14">
-          {sections.map(({ category, products }) => (
+          {/* Only render categories that currently have products; empty
+              categories are reachable via the menu and show their own empty
+              state on the dedicated category page. */}
+          {sections
+            .filter(({ products }) => products.length > 0)
+            .map(({ category, products }) => (
             <section key={category.slug}>
               <div className="mb-5 flex items-baseline justify-between gap-4">
                 <h2 className="font-display text-xl text-ink sm:text-2xl">
