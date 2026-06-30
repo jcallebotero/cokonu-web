@@ -1,9 +1,9 @@
 /**
  * Product domain model.
  *
- * Designed to be forward-compatible with a future Google Sheets source: each
- * field maps to a column, so swapping the local JSON (data/chocolatinas.json)
- * for a fetched Sheets JSON only touches the data-access layer (lib/catalog.ts).
+ * Fed from the live Google Sheets JSON via the data-access layer
+ * (lib/catalog.ts). Each field maps to a sheet column; pricing is volume-based
+ * across three tiers (see lib/pricing.ts).
  */
 
 /** Department slugs — must match the top-level slugs in config/navigation.ts. */
@@ -23,10 +23,16 @@ export interface Product {
   /** Subcategory slug (e.g. "gomas") or null when the category has none. */
   subcategory: string | null;
   /**
-   * Price in COP, integer pesos (no decimals), or null when not yet loaded
-   * from the legacy system. Null price → no price shown anywhere.
+   * Volume price tiers in COP (integer pesos), any may be null:
+   *   - price1: best/lowest price (highest quantity tier, 11+)
+   *   - price2: mid tier (6–10)
+   *   - price3: single-unit / base price (1–5)
+   * Read these through lib/pricing.ts (unitPriceForQty / basePrice) rather than
+   * directly. If all three are null the product is "quote by WhatsApp".
    */
-  price: number | null;
+  price1: number | null;
+  price2: number | null;
+  price3: number | null;
   /**
    * Available quantity (0 = out of stock), or null when inventory is unknown.
    * Null stock → treated as available with no quantity cap and never "Agotado".

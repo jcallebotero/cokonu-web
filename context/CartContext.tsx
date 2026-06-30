@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Product } from "@/types/product";
+import { unitPriceForQty, hasPrice } from "@/lib/pricing";
 
 /**
  * Cart state for Cokonu.
@@ -145,11 +146,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => {
     const itemCount = items.reduce((sum, l) => sum + l.quantity, 0);
-    // Subtotal is computable only if every item has a price; otherwise null.
-    const anyUnpriced = items.some((l) => l.product.price === null);
+    // Subtotal is computable only if every item is priced; otherwise null.
+    // Each line is priced at its volume tier for the line quantity.
+    const anyUnpriced = items.some((l) => !hasPrice(l.product));
     const subtotal = anyUnpriced
       ? null
-      : items.reduce((sum, l) => sum + (l.product.price as number) * l.quantity, 0);
+      : items.reduce(
+          (sum, l) =>
+            sum + (unitPriceForQty(l.product, l.quantity) as number) * l.quantity,
+          0,
+        );
     return {
       items,
       itemCount,

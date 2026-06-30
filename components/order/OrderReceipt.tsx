@@ -1,5 +1,6 @@
 import { formatCOP } from "@/lib/money";
 import { siteConfig } from "@/config/site";
+import { unitPriceForQty, hasPrice } from "@/lib/pricing";
 import type { CartLine } from "@/context/CartContext";
 
 /**
@@ -33,10 +34,13 @@ export function OrderReceipt({
   orderRef: string;
   date: Date;
 }) {
-  const allPriced =
-    items.length > 0 && items.every((l) => l.product.price !== null);
+  const allPriced = items.length > 0 && items.every((l) => hasPrice(l.product));
   const subtotal = allPriced
-    ? items.reduce((sum, l) => sum + (l.product.price as number) * l.quantity, 0)
+    ? items.reduce(
+        (sum, l) =>
+          sum + (unitPriceForQty(l.product, l.quantity) as number) * l.quantity,
+        0,
+      )
     : null;
 
   const dateLabel = date.toLocaleDateString("es-CO", {
@@ -145,7 +149,8 @@ export function OrderReceipt({
         </thead>
         <tbody>
           {items.map(({ product, quantity }) => {
-            const priced = product.price !== null;
+            const unit = unitPriceForQty(product, quantity);
+            const priced = unit !== null;
             return (
               <tr key={product.code} style={{ borderBottom: `1px solid ${C.line}` }}>
                 <td style={{ padding: "10px 6px", verticalAlign: "top" }}>
@@ -157,7 +162,7 @@ export function OrderReceipt({
                   )}
                   {priced && (
                     <div style={{ fontWeight: 300, fontSize: 12, color: C.inkSoft }}>
-                      {formatCOP(product.price as number)} c/u
+                      {formatCOP(unit)} c/u
                     </div>
                   )}
                 </td>
@@ -179,9 +184,7 @@ export function OrderReceipt({
                     color: priced ? C.ink : C.inkSoft,
                   }}
                 >
-                  {priced
-                    ? formatCOP((product.price as number) * quantity)
-                    : "Por confirmar"}
+                  {priced ? formatCOP(unit * quantity) : "Por confirmar"}
                 </td>
               </tr>
             );

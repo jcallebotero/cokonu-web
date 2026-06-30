@@ -9,6 +9,7 @@ import { ProductImage } from "@/components/product/ProductImage";
 import { QuoteButton } from "@/components/order/QuoteButton";
 import { CloseIcon } from "@/components/ui/icons";
 import { formatCOP } from "@/lib/money";
+import { unitPriceForQty } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 
 /**
@@ -162,11 +163,14 @@ export function CartDrawer() {
                         }
                         label={`Cantidad de ${product.name}`}
                       />
-                      {product.price !== null && (
-                        <span className="text-sm font-medium text-ink">
-                          {formatCOP(product.price * quantity)}
-                        </span>
-                      )}
+                      {(() => {
+                        const unit = unitPriceForQty(product, quantity);
+                        return unit === null ? null : (
+                          <span className="text-sm font-medium text-ink">
+                            {formatCOP(unit * quantity)}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </li>

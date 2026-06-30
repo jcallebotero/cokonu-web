@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { ProductImage } from "@/components/product/ProductImage";
 import { formatCOP } from "@/lib/money";
+import { basePrice } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types/product";
 
@@ -20,7 +21,8 @@ export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   // Null stock = unknown inventory → always available, never "Agotado".
   const outOfStock = product.stock !== null && product.stock <= 0;
-  const hasPrice = product.price !== null;
+  // Card shows the single-unit (qty 1) price; null = quote by WhatsApp.
+  const unitPrice = basePrice(product);
 
   return (
     <article className="group relative flex flex-col">
@@ -58,9 +60,9 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          {hasPrice ? (
+          {unitPrice !== null ? (
             <span className="text-sm font-medium text-ink">
-              {formatCOP(product.price as number)}
+              {formatCOP(unitPrice)}
             </span>
           ) : (
             <span className="font-meta text-xs text-ink-soft">
