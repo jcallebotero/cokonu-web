@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Downloaded order receipts (generated client-side / test artifacts)
+pedido-*.png

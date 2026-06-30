@@ -7,6 +7,8 @@
 export const siteConfig = {
   /** Brand name. */
   name: "Cokonu",
+  /** Full store display name — used in the WhatsApp message + receipt footer. */
+  storeName: "Cokonu — Confitería y Papelería",
   /** Short tagline shown under the logo and in the footer. */
   tagline: "Confitería y Papelería",
   /** Longer description for metadata / SEO. */
@@ -14,16 +16,18 @@ export const siteConfig = {
     "Cokonu — confitería y papelería en Medellín. Dulces, chocolatinas, mecatos y artículos de papelería con envío y cotización por WhatsApp.",
   /** Canonical locale for the customer-facing site. */
   locale: "es-CO",
-  /** City / location, used in copy and metadata. */
+  /** City / location, used in copy, metadata and the receipt. */
+  city: "Medellín, Colombia",
+  /** Alias kept for existing call sites. */
   location: "Medellín, Colombia",
 } as const;
 
 /**
- * Placeholder WhatsApp number used for the (future) WhatsApp checkout.
- * Format: country code + number, no "+" or spaces.
- * TODO: replace "573000000000" with the real Cokonu business number.
+ * Cokonu's WhatsApp business number for the quote flow.
+ * Format: country code + number, no "+" or spaces. SINGLE SOURCE for the
+ * number — every link/message derives it from here.
  */
-export const WHATSAPP_NUMBER = "573000000000";
+export const WHATSAPP_NUMBER = "573053624422";
 
 /**
  * Builds a wa.me link, optionally pre-filling a message.

@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { Button } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { ProductImage } from "@/components/product/ProductImage";
+import { QuoteButton } from "@/components/order/QuoteButton";
 import { CloseIcon } from "@/components/ui/icons";
 import { formatCOP } from "@/lib/money";
 import { cn } from "@/lib/cn";
@@ -30,6 +30,7 @@ export function CartDrawer() {
     subtotal,
     updateQuantity,
     removeItem,
+    clearCart,
   } = useCart();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -175,8 +176,8 @@ export function CartDrawer() {
         </div>
 
         {/* Footer / checkout */}
-        <div className="border-t border-line px-5 py-4">
-          {!isEmpty && (
+        {!isEmpty && (
+          <div className="border-t border-line px-5 py-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm text-ink-soft">Subtotal</span>
               {subtotal !== null ? (
@@ -189,20 +190,18 @@ export function CartDrawer() {
                 </span>
               )}
             </div>
-          )}
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full"
-            disabled
-            title="Disponible en el siguiente paso"
-          >
-            Cotizar por WhatsApp
-          </Button>
-          <p className="mt-2 text-center font-meta text-xs text-ink-soft">
-            La cotización por WhatsApp se habilitará en el siguiente paso.
-          </p>
-        </div>
+
+            <QuoteButton />
+
+            <button
+              type="button"
+              onClick={clearCart}
+              className="mt-3 block w-full text-center font-meta text-xs text-ink-soft underline-offset-2 transition-colors hover:text-pink-dark hover:underline"
+            >
+              Vaciar carrito
+            </button>
+          </div>
+        )}
       </aside>
     </div>
   );
