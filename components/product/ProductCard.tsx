@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { ProductImage } from "@/components/product/ProductImage";
 import { formatCOP } from "@/lib/money";
-import { basePrice } from "@/lib/pricing";
+import { basePrice, priceTierHints } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types/product";
 
@@ -23,6 +23,8 @@ export function ProductCard({ product }: { product: Product }) {
   const outOfStock = product.stock !== null && product.stock <= 0;
   // Card shows the single-unit (qty 1) price; null = quote by WhatsApp.
   const unitPrice = basePrice(product);
+  // First cheaper volume tier, if any, for the subtle "Desde N" hint.
+  const nextTier = priceTierHints(product)[0];
 
   return (
     <article className="group relative flex flex-col">
@@ -59,10 +61,18 @@ export function ProductCard({ product }: { product: Product }) {
           </p>
         )}
 
-        <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="mt-2 flex items-end justify-between gap-2">
           {unitPrice !== null ? (
-            <span className="text-sm font-medium text-ink">
-              {formatCOP(unitPrice)}
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-ink">
+                {formatCOP(unitPrice)}
+              </span>
+              {/* Subtle next-tier hint, e.g. "Desde 6: $34.000". */}
+              {nextTier && (
+                <span className="font-meta text-xs text-green-dark">
+                  Desde {nextTier.minQty}: {formatCOP(nextTier.price)}
+                </span>
+              )}
             </span>
           ) : (
             <span className="font-meta text-xs text-ink-soft">

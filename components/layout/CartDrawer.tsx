@@ -9,7 +9,7 @@ import { ProductImage } from "@/components/product/ProductImage";
 import { QuoteButton } from "@/components/order/QuoteButton";
 import { CloseIcon } from "@/components/ui/icons";
 import { formatCOP } from "@/lib/money";
-import { unitPriceForQty } from "@/lib/pricing";
+import { unitPriceForQty, basePrice } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 
 /**
@@ -151,6 +151,29 @@ export function CartDrawer() {
                         {product.presentation}
                       </p>
                     )}
+
+                    {/* Volume discount indicator (active when this line's tier
+                        unit price is below its qty-1 price). */}
+                    {(() => {
+                      const unit = unitPriceForQty(product, quantity);
+                      const base = basePrice(product);
+                      if (unit === null || base === null || unit >= base) {
+                        return null;
+                      }
+                      return (
+                        <p className="mt-0.5 font-meta text-xs">
+                          <span className="text-ink-soft line-through">
+                            {formatCOP(base)}
+                          </span>{" "}
+                          <span className="font-medium text-green-dark">
+                            {formatCOP(unit)} c/u
+                          </span>{" "}
+                          <span className="rounded-full bg-green-tint px-1.5 py-0.5 text-[10px] text-green-dark">
+                            por mayor
+                          </span>
+                        </p>
+                      );
+                    })()}
 
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <QuantityStepper
