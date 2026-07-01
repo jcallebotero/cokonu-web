@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group relative flex flex-col">
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface ring-1 ring-line/60">
+      <div className="relative aspect-square overflow-hidden bg-surface ring-1 ring-line/60">
         <ProductImage
           code={product.code}
           alt={product.name}
@@ -37,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         {outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/55">
-            <span className="rounded-full bg-ink px-3 py-1 text-xs font-medium uppercase tracking-wide text-surface">
+            <span className="bg-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wide text-green-dark ring-1 ring-green-dark/20">
               Agotado
             </span>
           </div>
@@ -91,10 +91,10 @@ export function ProductCard({ product }: { product: Product }) {
                 : `Agregar ${product.name} al carrito`
             }
             className={cn(
-              "relative z-10 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+              "relative z-10 px-3 py-1.5 text-xs font-medium transition-all duration-200",
               outOfStock
-                ? "cursor-not-allowed bg-line text-ink-soft"
-                : "bg-ink text-surface hover:bg-green-dark",
+                ? "cursor-not-allowed bg-bg-soft text-green-dark"
+                : "bg-green text-green-deep hover:scale-[1.04] hover:bg-pink hover:font-bold hover:text-pink-tint",
             )}
           >
             {outOfStock ? "Agotado" : "Agregar"}

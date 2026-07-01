@@ -101,6 +101,7 @@ async function getSource(): Promise<Product[]> {
     }
 
     const usedSlugs = new Set<string>();
+    const seenCodes = new Set<string>();
     const products: Product[] = [];
 
     for (const raw of rows as RawProduct[]) {
@@ -111,6 +112,10 @@ async function getSource(): Promise<Product[]> {
       const category = str(raw.category);
       // A product needs at least a code, name, department and category.
       if (!code || !name || !department || !category) continue;
+
+      // Dedupe by code — the sheet can contain duplicate rows; keep the first.
+      if (seenCodes.has(code)) continue;
+      seenCodes.add(code);
 
       // Stable, unique slug derived from the name (append code on collision).
       let slug = slugify(name) || code;

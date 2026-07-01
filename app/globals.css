@@ -24,10 +24,54 @@
   --color-pink-tint: #ffd9eb; /* subtle pink backgrounds */
 
   --color-line: #ececec; /* hairline borders */
+  --color-green-deep: #1f4d00; /* high-contrast text on brand green (Agregar) */
+  --color-bg-soft: #fafff5; /* off-white-green (Agotado background) */
 
   /* ---- Typography ---- */
   /* `--font-montserrat` is injected by next/font in layout.tsx. */
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  /* Global tracking (letter-spacing). Tune in ONE place; applied on body. */
+  --tracking-base: -0.035em;
+
+  /* ---- Radius ---- */
+  /* Brand direction: crisp 90° corners everywhere. Zeroing the radius scale
+     makes every `rounded-*` utility resolve to 0 (see also the global reset
+     below, which also flattens `rounded-full` and inline radii). */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+
+  /* ---- Animations ---- */
+  --animate-caret: cokonu-caret 1.1s step-end infinite;
+  /* Loader: flat 2D flip on its own vertical axis (rotateY), two turns,
+     ease-in so it starts gently and accelerates, then loops. */
+  --animate-coco-flip: cokonu-flip 1.8s cubic-bezier(0.4, 0, 1, 1) infinite;
+}
+
+/* Blinking text cursor for the search affordance. */
+@keyframes cokonu-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Loading coconut: flat coin-flip in place on its Y axis (no orbit). */
+@keyframes cokonu-flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(720deg);
+  }
 }
 
 /* ==========================================================================
@@ -44,16 +88,17 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-weight: 400; /* Montserrat Regular for body */
+    /* Slightly tighter tracking site-wide (see --tracking-base). */
+    letter-spacing: var(--tracking-base);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  /* Headings carry the brand's punchy voice: Montserrat 900 Italic.
-     Apply the `.font-display` utility (below) to headings/hero text. */
+  /* Headings carry the brand's punchy voice: Montserrat 900 (NON-italic). */
   .font-display {
     font-weight: 900;
-    font-style: italic;
-    letter-spacing: -0.01em;
+    font-style: normal;
+    letter-spacing: var(--tracking-base);
     line-height: 1.05;
   }
 
@@ -62,11 +107,25 @@
     font-weight: 300;
   }
 
+  /* Square corners everywhere — brand direction. Catches `rounded-full` and
+     any inline radius the token overrides can't reach, guaranteeing crisp 90°
+     corners with no stray rounded elements. */
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
+
+  /* Intentional exception: the cart count badge stays a perfect circle.
+     Higher specificity + !important overrides the square-corners reset. */
+  .cart-count-badge {
+    border-radius: 9999px !important;
+  }
+
   /* Accessible focus ring used across interactive elements. */
   :focus-visible {
     outline: 2px solid var(--color-green-dark);
     outline-offset: 2px;
-    border-radius: 4px;
   }
 
   @media (prefers-reduced-motion: reduce) {

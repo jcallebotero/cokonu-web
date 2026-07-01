@@ -61,7 +61,7 @@ export default async function HomePage() {
       {featured.length > 0 && (
         <section
           aria-label="Productos destacados"
-          className="mx-auto max-w-6xl px-4 py-16 sm:px-6"
+          className="w-full px-4 py-16 sm:px-6 lg:px-8"
         >
           <div className="mb-8 flex items-baseline justify-between gap-4">
             <h2 className="font-display text-2xl text-ink sm:text-3xl">

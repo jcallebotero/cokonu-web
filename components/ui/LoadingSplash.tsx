@@ -1,26 +1,27 @@
 import Image from "next/image";
 
 /**
- * Branded loading state: the Cokonu coconut character centered on the
- * off-white brand background, with a gentle pulse. Intentionally simple —
- * elaborate animation can come later.
+ * Loading state: a full-screen white overlay with the green Cokonu coconut
+ * centered, flipping flat on its own vertical axis (rotateY, coin-flip in
+ * place — no orbit). The flip starts gently and accelerates (ease-in), looping.
  */
 export function LoadingSplash() {
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 bg-bg"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-surface"
+      style={{ perspective: "900px" }}
     >
       <Image
-        src="/brand/logo_coko.png"
-        alt="Cokonu está cargando"
-        width={120}
-        height={120}
+        src="/brand/coko_verde.png"
+        alt="Cargando"
+        width={180}
+        height={180}
         priority
-        className="h-24 w-24 animate-pulse object-contain"
+        className="animate-coco-flip h-40 w-40 object-contain [transform-origin:center] sm:h-48 sm:w-48"
       />
-      <span className="font-meta text-sm text-ink-soft">Cargando…</span>
+      <span className="sr-only">Cargando…</span>
     </div>
   );
 }

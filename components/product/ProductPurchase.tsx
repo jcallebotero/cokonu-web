@@ -114,7 +114,7 @@ export function ProductPurchase({ product }: { product: Product }) {
       )}
 
       {outOfStock ? (
-        <p className="inline-flex rounded-full bg-line px-3 py-1 text-sm font-medium text-ink-soft">
+        <p className="inline-flex bg-bg-soft px-3 py-1 text-sm font-medium text-green-dark ring-1 ring-green-dark/20">
           Agotado
         </p>
       ) : (
@@ -133,7 +133,7 @@ export function ProductPurchase({ product }: { product: Product }) {
               onChange={setQty}
             />
             <Button
-              variant="primary"
+              variant="add"
               size="lg"
               onClick={() => addItem(product, qty)}
             >

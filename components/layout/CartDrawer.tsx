@@ -9,7 +9,7 @@ import { ProductImage } from "@/components/product/ProductImage";
 import { QuoteButton } from "@/components/order/QuoteButton";
 import { CloseIcon } from "@/components/ui/icons";
 import { formatCOP } from "@/lib/money";
-import { unitPriceForQty, basePrice } from "@/lib/pricing";
+import { unitPriceForQty, activeAndStruckUnit } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 
 /**
@@ -152,25 +152,30 @@ export function CartDrawer() {
                       </p>
                     )}
 
-                    {/* Volume discount indicator (active when this line's tier
-                        unit price is below its qty-1 price). */}
+                    {/* Unit-price row — ALWAYS rendered at a fixed height so
+                        the line never resizes as the quantity/tier changes.
+                        Progressive strikethrough: base → tier2 → tier3. */}
                     {(() => {
-                      const unit = unitPriceForQty(product, quantity);
-                      const base = basePrice(product);
-                      if (unit === null || base === null || unit >= base) {
-                        return null;
-                      }
+                      const { active, struck } = activeAndStruckUnit(
+                        product,
+                        quantity,
+                      );
+                      if (active === null) return null; // unpriced product
                       return (
-                        <p className="mt-0.5 font-meta text-xs">
-                          <span className="text-ink-soft line-through">
-                            {formatCOP(base)}
-                          </span>{" "}
-                          <span className="font-medium text-green-dark">
-                            {formatCOP(unit)} c/u
-                          </span>{" "}
-                          <span className="rounded-full bg-green-tint px-1.5 py-0.5 text-[10px] text-green-dark">
-                            por mayor
+                        <p className="mt-0.5 flex h-5 items-center gap-1.5 font-meta text-xs">
+                          {struck !== null && (
+                            <span className="text-ink-soft line-through">
+                              {formatCOP(struck)}
+                            </span>
+                          )}
+                          <span className="font-medium text-ink">
+                            {formatCOP(active)} c/u
                           </span>
+                          {struck !== null && (
+                            <span className="bg-green-tint px-1.5 py-0.5 text-[10px] leading-none text-green-dark">
+                              por mayor
+                            </span>
+                          )}
                         </p>
                       );
                     })()}

@@ -112,6 +112,33 @@ export function priceTiers(product: Product): PriceTier[] {
   }));
 }
 
+/**
+ * Progressive pricing for a line at a given quantity:
+ *  - `active`: the unit price actually charged (tier for this qty).
+ *  - `struck`: the unit price of the immediately-less-discounted tier, to show
+ *    struck through — but only when it's strictly higher (a real discount).
+ * At the base tier `struck` is null. Used by the cart line's progressive
+ * strikethrough (base → tier2 → tier3).
+ */
+export function activeAndStruckUnit(
+  product: Product,
+  qty: number,
+): { active: number | null; struck: number | null } {
+  const active = unitPriceForQty(product, qty);
+  if (active === null) return { active: null, struck: null };
+
+  const idx = tierIndexForQty(qty);
+  if (idx === 0) return { active, struck: null };
+
+  // tier2 strikes the base (qty-1) price; tier3 strikes the tier-2 price.
+  const prevRepQty = idx === 2 ? TIER2_MIN_QTY : 1;
+  const struck = unitPriceForQty(product, prevRepQty);
+  return {
+    active,
+    struck: struck !== null && struck > active ? struck : null,
+  };
+}
+
 /** Per-unit savings vs the qty-1 price at a given quantity (0 if none). */
 export function savingsPerUnit(product: Product, qty: number): number {
   const base = basePrice(product);
