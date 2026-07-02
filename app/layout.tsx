@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
+import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
 
 export const metadata: Metadata = {
   title: {
@@ -51,6 +52,9 @@ export default function RootLayout({
 
           {/* Slide-in cart panel, controlled via CartContext. */}
           <CartDrawer />
+
+          {/* Floating WhatsApp button (bottom-left, all pages). */}
+          <WhatsAppFab />
         </CartProvider>
       </body>
     </html>

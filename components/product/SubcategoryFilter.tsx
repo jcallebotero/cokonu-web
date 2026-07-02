@@ -27,9 +27,9 @@ export function SubcategoryFilter({
 
   const chip = (selected: boolean) =>
     cn(
-      "rounded-full px-4 py-1.5 text-sm transition-colors",
+      "px-4 py-1.5 text-sm transition-colors",
       selected
-        ? "bg-ink text-surface"
+        ? "bg-pink text-surface"
         : "bg-green-tint/50 text-ink hover:bg-green-tint",
     );
 

@@ -88,7 +88,7 @@ export function Header() {
                 width={560}
                 height={133}
                 priority
-                className="hidden h-12 w-auto object-contain lg:block xl:h-14"
+                className="hidden h-10 w-auto object-contain lg:block xl:h-12"
               />
               {/* Coconut character on mobile */}
               <Image
@@ -102,27 +102,9 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Center (desktop): departments + search, balanced between the logo
-              and the cart via flex-1 + justify-center. */}
-          <div className="hidden flex-1 items-center justify-center gap-8 lg:flex">
-            <HeaderNav />
-            <button
-              type="button"
-              aria-label="Buscar"
-              title="Buscar (próximamente)"
-              className="flex items-center gap-1.5 p-2 text-ink hover:bg-green-tint"
-            >
-              <SearchIcon />
-              <span className="flex items-center text-sm">
-                Buscar
-                {/* Thicker, taller blinking caret. */}
-                <span
-                  className="animate-caret ml-1 inline-block h-5 w-[3px] bg-green-dark"
-                  aria-hidden
-                />
-              </span>
-            </button>
-          </div>
+          {/* Center (desktop): departments + search, evenly distributed across
+              the full width (see HeaderNav). */}
+          <HeaderNav />
 
           {/* Right (anchored): search icon (mobile only) + cart */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">

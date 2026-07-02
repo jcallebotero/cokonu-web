@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { departments, type NavNode } from "@/config/navigation";
-import { ChevronDownIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 /**
@@ -45,10 +45,13 @@ export function HeaderNav() {
   const close = () => setOpenKey(null);
 
   return (
+    // flex-1 + justify-evenly spreads the three items (departments + search)
+    // with even rhythm across the full width between the logo and the cart,
+    // instead of a tight cluster floating between two large voids.
     <nav
       ref={navRef}
       aria-label="Departamentos"
-      className="flex items-center gap-8"
+      className="hidden flex-1 items-center justify-evenly lg:flex"
     >
       {confiteria && (
         <ConfiteriaMenu
@@ -66,7 +69,29 @@ export function HeaderNav() {
           onClose={close}
         />
       )}
+      <SearchButton />
     </nav>
+  );
+}
+
+/** Visual-only "Buscar" affordance with a blinking caret. */
+function SearchButton() {
+  return (
+    <button
+      type="button"
+      aria-label="Buscar"
+      title="Buscar (próximamente)"
+      className="flex items-center gap-1.5 p-2 text-ink hover:bg-green-tint"
+    >
+      <SearchIcon />
+      <span className="flex items-center text-sm">
+        Buscar
+        <span
+          className="animate-caret ml-1 inline-block h-5 w-[3px] bg-green-dark"
+          aria-hidden
+        />
+      </span>
+    </button>
   );
 }
 

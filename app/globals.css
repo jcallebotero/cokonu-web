@@ -130,9 +130,10 @@
     border-radius: 0 !important;
   }
 
-  /* Intentional exception: the cart count badge stays a perfect circle.
-     Higher specificity + !important overrides the square-corners reset. */
-  .cart-count-badge {
+  /* Intentional round exceptions to the square-corners reset (cart count badge
+     and the floating WhatsApp button). Higher specificity + !important wins. */
+  .cart-count-badge,
+  .is-round {
     border-radius: 9999px !important;
   }
 
