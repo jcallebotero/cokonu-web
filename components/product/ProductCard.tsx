@@ -94,7 +94,7 @@ export function ProductCard({ product }: { product: Product }) {
               "relative z-10 px-3 py-1.5 text-xs font-medium transition-all duration-200",
               outOfStock
                 ? "cursor-not-allowed bg-bg-soft text-green-dark"
-                : "bg-green text-green-deep hover:scale-[1.04] hover:bg-pink hover:font-bold hover:text-pink-tint",
+                : "bg-green text-green-deep hover:scale-[1.04] hover:bg-pink hover:text-pink-tint",
             )}
           >
             {outOfStock ? "Agotado" : "Agregar"}

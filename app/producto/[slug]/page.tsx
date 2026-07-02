@@ -45,7 +45,7 @@ export default async function ProductPage({
   const imageCodes = [product.code];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
       {/* Breadcrumb */}
       <nav aria-label="Ruta de navegación" className="mb-6">
         {backNode ? (

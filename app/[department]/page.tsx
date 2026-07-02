@@ -47,7 +47,7 @@ export default async function DepartmentPage({
   );
 
   return (
-    <div className="w-full px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+    <div className="w-full px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8 lg:px-8">
       <PageHeading
         title={dept.label}
         subtitle={`Explora todo nuestro surtido de ${dept.label.toLowerCase()}.`}

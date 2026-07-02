@@ -31,7 +31,7 @@ export function QuoteButton() {
   return (
     <div>
       <Button
-        variant="primary"
+        variant="add"
         size="lg"
         className="w-full"
         onClick={handleQuote}

@@ -20,6 +20,8 @@ export interface NavNode {
   slug: string;
   /** Absolute href generated from the full slug path, e.g. "/confiteria/confites". */
   href: string;
+  /** Optional card image (path under /public) for the image mega-menu. */
+  image?: string;
   /** Optional nested categories / subcategories. */
   children?: NavNode[];
 }
@@ -40,6 +42,7 @@ function withHrefs(nodes: NavNodeInput[], parentPath = ""): NavNode[] {
       label: node.label,
       slug: node.slug,
       href,
+      ...(node.image ? { image: node.image } : {}),
       ...(node.children
         ? { children: withHrefs(node.children, href) }
         : {}),
@@ -56,10 +59,15 @@ const departmentsInput: NavNodeInput[] = [
     label: "Confitería",
     slug: "confiteria",
     children: [
-      { label: "Chocolatinas", slug: "chocolatinas" },
+      {
+        label: "Chocolatinas",
+        slug: "chocolatinas",
+        image: "/brand/coko_chocolate.png",
+      },
       {
         label: "Confites",
         slug: "confites",
+        image: "/brand/coko_candie.png",
         children: [
           { label: "Bombones", slug: "bombones" },
           { label: "Candies", slug: "candies" },
@@ -70,8 +78,12 @@ const departmentsInput: NavNodeInput[] = [
           { label: "Tradicionales", slug: "tradicionales" },
         ],
       },
-      { label: "Galletas", slug: "galletas" },
-      { label: "Mecatos", slug: "mecatos" },
+      {
+        label: "Galletas",
+        slug: "galletas",
+        image: "/brand/coko_galleta.png",
+      },
+      { label: "Mecatos", slug: "mecatos", image: "/brand/coko_mecato.png" },
     ],
   },
   {

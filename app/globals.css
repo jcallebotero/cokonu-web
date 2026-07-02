@@ -50,6 +50,20 @@
   /* Loader: flat 2D flip on its own vertical axis (rotateY), two turns,
      ease-in so it starts gently and accelerates, then loops. */
   --animate-coco-flip: cokonu-flip 1.8s cubic-bezier(0.4, 0, 1, 1) infinite;
+  /* Announcement bar: continuous seamless left-scroll (track is duplicated,
+     so translating -50% loops with no gap). */
+  --animate-marquee: cokonu-marquee 30s linear infinite;
+}
+
+/* Seamless marquee: the track holds two identical sequences; shifting it by
+   half its width lands exactly on the second copy. */
+@keyframes cokonu-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 /* Blinking text cursor for the search affordance. */

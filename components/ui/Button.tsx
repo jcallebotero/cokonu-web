@@ -30,9 +30,9 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   primary: "bg-ink text-surface hover:bg-green-dark",
-  // Legible dark-green text on brand green; hover flips to pink + bold + a
-  // subtle size bump for a tactile "click-ready" feel.
-  add: "bg-green text-green-deep hover:bg-pink hover:text-pink-tint hover:font-bold hover:scale-[1.04]",
+  // Legible dark-green text on brand green; hover flips to pink + a subtle
+  // size bump for a tactile "click-ready" feel. Font-weight stays constant.
+  add: "bg-green text-green-deep hover:bg-pink hover:text-pink-tint hover:scale-[1.04]",
   green: "bg-green-dark text-surface hover:bg-green",
   outline:
     "border border-line bg-transparent text-ink hover:border-ink hover:bg-surface",

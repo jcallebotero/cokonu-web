@@ -168,7 +168,14 @@ export function CartDrawer() {
                               {formatCOP(struck)}
                             </span>
                           )}
-                          <span className="font-medium text-ink">
+                          {/* Active price turns green when discounted so the
+                              volume saving stands out; normal color at base. */}
+                          <span
+                            className={cn(
+                              "font-medium",
+                              struck !== null ? "text-green-deep" : "text-ink",
+                            )}
+                          >
                             {formatCOP(active)} c/u
                           </span>
                           {struck !== null && (
@@ -228,7 +235,7 @@ export function CartDrawer() {
             <button
               type="button"
               onClick={clearCart}
-              className="mt-3 block w-full text-center font-meta text-xs text-ink-soft underline-offset-2 transition-colors hover:text-pink-dark hover:underline"
+              className="mt-3 block w-full text-center text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors hover:text-pink-dark hover:decoration-pink-dark"
             >
               Vaciar carrito
             </button>
