@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 import { productImageSrc } from "@/lib/productImage";
 
 /**
- * Product image. The source is DERIVED from the product `code`
+ * Product image. The source is DERIVED from the product's department + code
  * (lib/productImage.ts) — never a stored path. If the file is missing
  * (onError), it shows a neutral on-brand placeholder (faint coconut on
  * green-tint) so a not-yet-uploaded photo never breaks the grid layout.
@@ -15,12 +15,14 @@ import { productImageSrc } from "@/lib/productImage";
  * (e.g. `relative aspect-square`) because it renders with `fill`.
  */
 export function ProductImage({
+  department,
   code,
   alt,
   sizes,
   priority,
   className,
 }: {
+  department: string;
   code: string;
   alt: string;
   sizes?: string;
@@ -48,7 +50,7 @@ export function ProductImage({
 
   return (
     <Image
-      src={productImageSrc(code)}
+      src={productImageSrc(department, code)}
       alt={alt}
       fill
       sizes={sizes ?? "(max-width: 768px) 50vw, 25vw"}

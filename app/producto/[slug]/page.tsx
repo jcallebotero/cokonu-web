@@ -41,8 +41,8 @@ export default async function ProductPage({
   const backNode = subcategory ?? category;
 
   // Gallery is structured to support multiple images later; one for now.
-  // Images are derived from the product code (lib/productImage.ts).
-  const imageCodes = [product.code];
+  // Images are derived from the product's department + code (lib/productImage).
+  const gallery = [{ department: product.department, code: product.code }];
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
@@ -70,21 +70,26 @@ export default async function ProductPage({
         <div>
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface ring-1 ring-line/60">
             <ProductImage
-              code={imageCodes[0]}
+              department={gallery[0].department}
+              code={gallery[0].code}
               alt={product.name}
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />
           </div>
           {/* Thumbnail strip — rendered only when there are multiple images. */}
-          {imageCodes.length > 1 && (
+          {gallery.length > 1 && (
             <ul className="mt-3 flex gap-3">
-              {imageCodes.map((c, i) => (
+              {gallery.map((img, i) => (
                 <li
-                  key={c}
+                  key={`${img.department}-${img.code}`}
                   className="relative aspect-square w-20 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
                 >
-                  <ProductImage code={c} alt={`${product.name} ${i + 1}`} />
+                  <ProductImage
+                    department={img.department}
+                    code={img.code}
+                    alt={`${product.name} ${i + 1}`}
+                  />
                 </li>
               ))}
             </ul>

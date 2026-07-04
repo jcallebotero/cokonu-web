@@ -112,7 +112,7 @@ export function CartDrawer() {
           ) : (
             <ul className="space-y-5">
               {items.map(({ product, quantity }) => (
-                <li key={product.code} className="flex gap-3">
+                <li key={product.slug} className="flex gap-3">
                   {/* Thumbnail (links to product page) */}
                   <Link
                     href={`/producto/${product.slug}`}
@@ -120,6 +120,7 @@ export function CartDrawer() {
                     className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
                   >
                     <ProductImage
+                      department={product.department}
                       code={product.code}
                       alt={product.name}
                       sizes="80px"
@@ -138,7 +139,7 @@ export function CartDrawer() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => removeItem(product.code)}
+                        onClick={() => removeItem(product.slug)}
                         aria-label={`Quitar ${product.name} del carrito`}
                         className="shrink-0 rounded p-1 text-ink-soft transition-colors hover:text-pink-dark"
                       >
@@ -194,7 +195,7 @@ export function CartDrawer() {
                         max={product.stock === null ? 99 : product.stock}
                         size="sm"
                         onChange={(next) =>
-                          updateQuantity(product.code, next)
+                          updateQuantity(product.slug, next)
                         }
                         label={`Cantidad de ${product.name}`}
                       />

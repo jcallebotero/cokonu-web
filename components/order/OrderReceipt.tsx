@@ -152,7 +152,7 @@ export function OrderReceipt({
             const unit = unitPriceForQty(product, quantity);
             const priced = unit !== null;
             return (
-              <tr key={product.code} style={{ borderBottom: `1px solid ${C.line}` }}>
+              <tr key={product.slug} style={{ borderBottom: `1px solid ${C.line}` }}>
                 <td style={{ padding: "10px 6px", verticalAlign: "top" }}>
                   <div style={{ fontWeight: 400 }}>{product.name}</div>
                   {product.presentation && (

@@ -16,7 +16,7 @@ import { cn } from "@/lib/cn";
  * Data comes from config/navigation.ts (single source of truth), including the
  * per-category card images.
  */
-export function HeaderNav() {
+export function HeaderNav({ onSearch }: { onSearch: () => void }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -69,18 +69,23 @@ export function HeaderNav() {
           onClose={close}
         />
       )}
-      <SearchButton />
+      <SearchButton
+        onClick={() => {
+          close(); // close any open mega-menu before the search opens
+          onSearch();
+        }}
+      />
     </nav>
   );
 }
 
-/** Visual-only "Buscar" affordance with a blinking caret. */
-function SearchButton() {
+/** "Buscar" affordance with a blinking caret; opens the search panel. */
+function SearchButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       aria-label="Buscar"
-      title="Buscar (próximamente)"
+      onClick={onClick}
       className="flex items-center gap-1.5 p-2 text-ink hover:bg-green-tint"
     >
       <SearchIcon />

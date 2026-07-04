@@ -20,9 +20,9 @@ export function ProductGrid({ products }: { products: Product[] }) {
 
   return (
     <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {products.map((product, index) => (
-        // Composite key guarantees uniqueness even if codes ever collide.
-        <ProductCard key={`${product.code}-${index}`} product={product} />
+      {products.map((product) => (
+        // Slug is unique across the whole catalog (department + code identity).
+        <ProductCard key={product.slug} product={product} />
       ))}
     </div>
   );

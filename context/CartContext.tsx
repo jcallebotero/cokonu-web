@@ -42,10 +42,10 @@ interface CartContextValue {
   isOpen: boolean;
   /** Add `qty` units of a product (clamped to stock). No-op if out of stock. */
   addItem: (product: Product, qty?: number) => void;
-  /** Remove a line entirely by product code. */
-  removeItem: (code: string) => void;
-  /** Set the quantity of a line (clamped to stock; 0 removes it). */
-  updateQuantity: (code: string, qty: number) => void;
+  /** Remove a line entirely by product slug (the unique identity). */
+  removeItem: (slug: string) => void;
+  /** Set the quantity of a line by slug (clamped to stock; 0 removes it). */
+  updateQuantity: (slug: string, qty: number) => void;
   /** Empty the cart. */
   clearCart: () => void;
   openCart: () => void;
@@ -80,7 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
           setItems(
             parsed.filter(
-              (l) => l?.product?.code && typeof l.quantity === "number" && l.quantity > 0,
+              (l) => l?.product?.slug && typeof l.quantity === "number" && l.quantity > 0,
             ),
           );
         }
@@ -113,11 +113,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // No quantity cap when stock is unknown (null).
       const cap = product.stock === null ? Infinity : product.stock;
       setItems((prev) => {
-        const existing = prev.find((l) => l.product.code === product.code);
+        // Identity is the slug (unique per department+code), so two products
+        // sharing a code across departments are distinct cart lines.
+        const existing = prev.find((l) => l.product.slug === product.slug);
         if (existing) {
           const nextQty = Math.min(existing.quantity + qty, cap);
           return prev.map((l) =>
-            l.product.code === product.code ? { ...l, quantity: nextQty } : l,
+            l.product.slug === product.slug ? { ...l, quantity: nextQty } : l,
           );
         }
         return [...prev, { product, quantity: Math.min(qty, cap) }];
@@ -127,14 +129,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const removeItem = useCallback((code: string) => {
-    setItems((prev) => prev.filter((l) => l.product.code !== code));
+  const removeItem = useCallback((slug: string) => {
+    setItems((prev) => prev.filter((l) => l.product.slug !== slug));
   }, []);
 
-  const updateQuantity = useCallback((code: string, qty: number) => {
+  const updateQuantity = useCallback((slug: string, qty: number) => {
     setItems((prev) =>
       prev.flatMap((l) => {
-        if (l.product.code !== code) return [l];
+        if (l.product.slug !== slug) return [l];
         const cap = l.product.stock === null ? Infinity : l.product.stock;
         const clamped = Math.max(0, Math.min(qty, cap));
         return clamped === 0 ? [] : [{ ...l, quantity: clamped }];

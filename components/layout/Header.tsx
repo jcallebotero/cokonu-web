@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { HeaderNav } from "@/components/layout/HeaderNav";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { SearchPanel } from "@/components/search/SearchPanel";
 import { SearchIcon, CartIcon, MenuIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
@@ -22,6 +23,7 @@ import { cn } from "@/lib/cn";
 export function Header() {
   const { itemCount, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
 
   // Reveal on scroll up / near top; hide on scroll down.
@@ -104,14 +106,14 @@ export function Header() {
 
           {/* Center (desktop): departments + search, evenly distributed across
               the full width (see HeaderNav). */}
-          <HeaderNav />
+          <HeaderNav onSearch={() => setSearchOpen(true)} />
 
           {/* Right (anchored): search icon (mobile only) + cart */}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               aria-label="Buscar"
-              title="Buscar (próximamente)"
+              onClick={() => setSearchOpen(true)}
               className="p-2 text-ink hover:bg-green-tint lg:hidden"
             >
               <SearchIcon />
@@ -133,6 +135,13 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        {/* Slide-in search bar + live dropdown (anchored below the header row);
+            its green overlay is portalled to <body>. */}
+        <SearchPanel
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+        />
       </header>
 
       {/*

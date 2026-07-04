@@ -31,6 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-surface ring-1 ring-line/60">
         <ProductImage
+          department={product.department}
           code={product.code}
           alt={product.name}
           className="transition-transform duration-300 group-hover:scale-105"
