@@ -1,61 +1,45 @@
-import Link from "next/link";
-import { departments } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
-import { Button } from "@/components/ui/Button";
+import { FORCE_INTRO } from "@/components/home/introConfig";
+import { IntroCurtain } from "@/components/home/IntroCurtain";
+import { Hero } from "@/components/home/Hero";
 import { getFeaturedProducts } from "@/lib/catalog";
 import { ProductGrid } from "@/components/product/ProductGrid";
 
 /**
- * Home page: hero + a "Destacados" grid of featured products read through the
- * catalog data-access layer.
+ * Runs synchronously BEFORE first paint (plain inline <script>, not
+ * next/script — it must block). Decides the intro's fate for this load and
+ * publishes it as html[data-intro], which globals.css and the intro
+ * components key off:
+ *   - reduced motion → "skip" (no curtain ever; overrides FORCE_INTRO)
+ *   - FORCE_INTRO → "play" every load (ignores + doesn't touch sessionStorage)
+ *   - otherwise: "play" once per session (marking it seen), else "skip"
+ * "play" hides the hero behind a white cover until the curtain finishes. The
+ * 6s timeout is a failsafe: if hydration never happens, the page un-hides
+ * itself. (With JS fully disabled this script doesn't run and the page renders
+ * normally.) FORCE_INTRO is interpolated so the gate and the animation agree.
+ */
+const INTRO_SCRIPT = `(function(){var d=document.documentElement;try{if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){d.dataset.intro="skip";return}var f=${FORCE_INTRO};if(!f&&sessionStorage.getItem("cokonu:introSeen")){d.dataset.intro="skip";return}if(!f){sessionStorage.setItem("cokonu:introSeen","1")}d.dataset.intro="play";window.setTimeout(function(){if(d.dataset.intro==="play"){d.dataset.intro="skip"}},6000)}catch(e){d.dataset.intro="skip"}})()`;
+
+/* The <script> travels inside a hidden div's innerHTML rather than as a React
+   element: React 19 warns on <script> elements in component trees (it never
+   executes them on client renders anyway). As raw SSR HTML the browser parser
+   still executes it synchronously, which is exactly what we need. On pure
+   client-side navigations it (intentionally) doesn't run: no attribute is set
+   and the hero simply renders live, no curtain. */
+const INTRO_SCRIPT_HTML = { __html: `<script>${INTRO_SCRIPT}</script>` };
+
+/**
+ * Home page: intro curtain (once per session) + full-bleed hero with the
+ * idling mascot, followed by the "Destacados" grid read through the catalog
+ * data-access layer.
  */
 export default async function HomePage() {
   const featured = await getFeaturedProducts();
 
   return (
     <>
-      {/* Hero */}
-      <section className="bg-bg">
-        <div className="mx-auto max-w-6xl px-6 py-20 text-center sm:py-28">
-          <p className="font-meta text-sm uppercase tracking-[0.2em] text-green-dark">
-            {siteConfig.location}
-          </p>
-          <h1 className="font-display mt-4 text-4xl text-ink sm:text-6xl">
-            Dulces, mecatos y papelería
-            <br className="hidden sm:block" /> con sabor a {siteConfig.name}.
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base text-ink-soft">
-            {siteConfig.tagline}. Pronto podrás armar tu pedido y cotizarlo por
-            WhatsApp en segundos.
-          </p>
-
-          {/* Quick links into the two departments */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            {departments.map((dept, i) => (
-              <Link key={dept.slug} href={dept.href}>
-                <Button variant={i === 0 ? "primary" : "outline"} size="lg">
-                  Ver {dept.label}
-                </Button>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Placeholder banner block */}
-      <section className="mx-auto max-w-6xl px-6">
-        <div className="flex min-h-64 items-center justify-center rounded-2xl bg-green-tint px-6 py-16 text-center">
-          <div>
-            <h2 className="font-display text-2xl text-ink sm:text-3xl">
-              Banner destacado
-            </h2>
-            <p className="mx-auto mt-3 max-w-md font-meta text-sm text-ink-soft">
-              Espacio reservado para promociones y lanzamientos. El contenido
-              real llega en la siguiente fase.
-            </p>
-          </div>
-        </div>
-      </section>
+      <div hidden dangerouslySetInnerHTML={INTRO_SCRIPT_HTML} />
+      <IntroCurtain />
+      <Hero />
 
       {/* Featured products — section hides itself cleanly when there are none. */}
       {featured.length > 0 && (

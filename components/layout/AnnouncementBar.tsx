@@ -31,7 +31,7 @@ export function AnnouncementBar() {
     <div
       role="region"
       aria-label={MESSAGE}
-      className="overflow-hidden bg-green-tint text-ink"
+      className="relative z-40 overflow-hidden bg-green-tint text-ink"
     >
       <div className="flex w-max animate-marquee py-1.5 text-xs hover:[animation-play-state:paused]">
         <Sequence />

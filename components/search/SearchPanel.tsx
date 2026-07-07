@@ -18,12 +18,14 @@ const DEBOUNCE_MS = 180;
 
 /**
  * Header search: a bar that slides in directly below the header with a live
- * results dropdown (max 4 previews, same ProductCard as the grid), plus a
- * translucent green overlay dimming the page below.
+ * results dropdown (up to 4 vertical product cards — the SAME ProductCard used
+ * in the category grid — laid out 4 across), plus a translucent green scrim
+ * that dims the page below (still visible, pushed back with a green veil).
  *
  * The bar/dropdown render inside the (sticky) <header> so they position against
- * it; the overlay is portalled to <body> so its `fixed inset-0` isn't clipped
- * by the header's backdrop-filter. Closes via X, Escape, or overlay click.
+ * it; the scrim is portalled to <body> so its `fixed inset-0` isn't clipped by
+ * the header's backdrop-filter and it sits below the header (z-40). Closes via
+ * X, Escape, or scrim click.
  */
 export function SearchPanel({
   open,
@@ -129,13 +131,17 @@ export function SearchPanel({
             <SearchIcon className="shrink-0 text-ink-soft" />
             <input
               ref={inputRef}
-              type="search"
+              type="text"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar…"
               aria-label="Buscar productos"
               className="flex-1 bg-transparent text-base text-ink outline-none placeholder:text-ink-soft"
             />
+            {/* Single close control — closes the whole search overlay. */}
             <button
               type="button"
               onClick={onClose}
@@ -150,27 +156,43 @@ export function SearchPanel({
             <div className="pb-6">
               {results && results.items.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    {results.items.map((p) => (
-                      <ProductCard key={p.slug} product={p} />
-                    ))}
+                  {/* Count (left) + "Ver todo" (right), above the previews. */}
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="font-meta text-sm text-ink-soft">
+                      {results.total} resultados
+                    </span>
+                    {results.total > results.items.length && (
+                      <button
+                        type="button"
+                        onClick={() => goToResults()}
+                        className="relative z-10 text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors hover:text-green-dark hover:decoration-green-dark"
+                      >
+                        Ver todo
+                      </button>
+                    )}
                   </div>
-                  {results.total > results.items.length && (
-                    <button
-                      type="button"
-                      onClick={() => goToResults()}
-                      className="mt-5 block w-full text-center text-sm font-medium text-ink underline decoration-line underline-offset-4 transition-colors hover:text-green-dark hover:decoration-green-dark"
-                    >
-                      Ver todo ({results.total} resultados)
-                    </button>
-                  )}
+
+                  {/* Vertical product cards — the SAME ProductCard as the
+                      category grid (photo on top, name/price below). Always 4
+                      across (desktop AND mobile). On mobile the whole grid is
+                      zoomed down (with an inverse width so it still fills the
+                      row) so the four full cards fit without horizontal
+                      overflow; `zoom` scales layout, so there's no leftover
+                      space. Desktop renders at natural size. */}
+                  <div className="w-[calc((100vw-2rem)/0.6)] [zoom:0.6] sm:w-full sm:[zoom:1]">
+                    <div className="grid grid-cols-4 gap-4">
+                      {results.items.map((p) => (
+                        <ProductCard key={p.slug} product={p} />
+                      ))}
+                    </div>
+                  </div>
                 </>
               ) : results && results.items.length === 0 ? (
-                <p className="py-8 text-center font-meta text-sm text-ink-soft">
+                <p className="py-6 text-center font-meta text-sm text-ink-soft">
                   No encontramos productos para “{trimmed}”.
                 </p>
               ) : (
-                <p className="py-8 text-center font-meta text-sm text-ink-soft">
+                <p className="py-6 text-center font-meta text-sm text-ink-soft">
                   Buscando…
                 </p>
               )}
@@ -179,15 +201,17 @@ export function SearchPanel({
         </div>
       </div>
 
-      {/* Translucent green overlay dimming the page below; click to close.
-          Portalled to <body> so it isn't clipped by the header's backdrop. */}
+      {/* Translucent GREEN scrim that dims the page below the bar with a green
+          veil (page stays visible); click to close. Portalled to <body> so it
+          isn't clipped by the header's backdrop, and sits below the header
+          (z-40) so the header + search bar/dropdown stay fully clear above it. */}
       {mounted &&
         createPortal(
           <div
             aria-hidden
             onClick={onClose}
             className={cn(
-              "fixed inset-0 z-30 bg-green/30 backdrop-blur-[1px] transition-opacity duration-200",
+              "fixed inset-0 z-30 bg-green/35 backdrop-blur-[2px] transition-opacity duration-200",
               open ? "opacity-100" : "pointer-events-none opacity-0",
             )}
           />,

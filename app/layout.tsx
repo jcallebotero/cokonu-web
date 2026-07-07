@@ -3,10 +3,7 @@ import "./globals.css";
 import { montserrat } from "./fonts";
 import { siteConfig } from "@/config/site";
 import { CartProvider } from "@/context/CartContext";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { CartDrawer } from "@/components/layout/CartDrawer";
-import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: {
@@ -26,6 +23,9 @@ export default function RootLayout({
       lang="es-CO"
       data-scroll-behavior="smooth"
       className={`${montserrat.variable} h-full`}
+      // The homepage intro script (app/page.tsx) sets data-intro on <html>
+      // BEFORE hydration — expected, don't warn about it.
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-ink">
         {/*
@@ -42,19 +42,7 @@ export default function RootLayout({
             Saltar al contenido
           </a>
 
-          <Header />
-
-          <main id="contenido" className="flex-1">
-            {children}
-          </main>
-
-          <Footer />
-
-          {/* Slide-in cart panel, controlled via CartContext. */}
-          <CartDrawer />
-
-          {/* Floating WhatsApp button (bottom-left, all pages). */}
-          <WhatsAppFab />
+          <AppShell>{children}</AppShell>
         </CartProvider>
       </body>
     </html>

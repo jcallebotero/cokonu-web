@@ -16,7 +16,13 @@ import { cn } from "@/lib/cn";
  * Data comes from config/navigation.ts (single source of truth), including the
  * per-category card images.
  */
-export function HeaderNav({ onSearch }: { onSearch: () => void }) {
+export function HeaderNav({
+  onSearch,
+  variant = "solid",
+}: {
+  onSearch: () => void;
+  variant?: "solid" | "overlay";
+}) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -69,12 +75,16 @@ export function HeaderNav({ onSearch }: { onSearch: () => void }) {
           onClose={close}
         />
       )}
-      <SearchButton
-        onClick={() => {
-          close(); // close any open mega-menu before the search opens
-          onSearch();
-        }}
-      />
+      {/* On the overlay (home) header, Buscar lives in the right-side chip
+          cluster (see HeaderRow), so the center nav omits it. */}
+      {variant === "solid" && (
+        <SearchButton
+          onClick={() => {
+            close(); // close any open mega-menu before the search opens
+            onSearch();
+          }}
+        />
+      )}
     </nav>
   );
 }

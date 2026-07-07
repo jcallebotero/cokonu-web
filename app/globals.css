@@ -26,6 +26,7 @@
   --color-line: #ececec; /* hairline borders */
   --color-green-deep: #1f4d00; /* high-contrast text on brand green (Agregar) */
   --color-bg-soft: #fafff5; /* off-white-green (Agotado background) */
+  --color-green-pale: #f4ffe9; /* hero wordmark on brand green — low contrast on purpose, reads as a background element */
 
   /* ---- Typography ---- */
   /* `--font-montserrat` is injected by next/font in layout.tsx. */
@@ -51,8 +52,8 @@
      ease-in so it starts gently and accelerates, then loops. */
   --animate-coco-flip: cokonu-flip 1.8s cubic-bezier(0.4, 0, 1, 1) infinite;
   /* Announcement bar: continuous seamless left-scroll (track is duplicated,
-     so translating -50% loops with no gap). */
-  --animate-marquee: cokonu-marquee 30s linear infinite;
+     so translating -50% loops with no gap). Slow + calm on purpose. */
+  --animate-marquee: cokonu-marquee 60s linear infinite;
 }
 
 /* Seamless marquee: the track holds two identical sequences; shifting it by
@@ -135,6 +136,47 @@
   .cart-count-badge,
   .is-round {
     border-radius: 9999px !important;
+  }
+
+  /* Hero: the resting green panel is an INSET, ROUNDED exception to the
+     square-corners rule (like the cart badge + WhatsApp button). ~20px mobile,
+     ~28px desktop. */
+  .hero-panel {
+    border-radius: 20px !important;
+  }
+  @media (min-width: 768px) {
+    .hero-panel {
+      border-radius: 28px !important;
+    }
+  }
+
+  /* Intro curtain box: the ONLY transiently-animated radius on the site.
+     Framer Motion drives the --intro-radius variable (seed → resting panel
+     radius) as the box grows, so it needs its own escape hatch from the
+     square-corners reset — `.is-round` won't do (it pins 9999px). */
+  .intro-box {
+    border-radius: var(--intro-radius, 26px) !important;
+  }
+
+  /* Homepage intro gating. An inline script in app/page.tsx sets
+     html[data-intro] synchronously BEFORE first paint:
+       "play" → first load of the session: freeze scroll, cover the page in
+                white (just under the z-60 curtain overlay) and keep the live
+                hero invisible — but in the DOM for SEO — until the curtain
+                finishes and flips the attribute to "done".
+       "skip" / "done" → normal render: no curtain, no flash. */
+  html[data-intro="play"] {
+    overflow: hidden;
+  }
+  html[data-intro="play"] body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 59; /* under IntroCurtain (z-60), over everything else */
+    background: #fff; /* matches the curtain's white stage */
+  }
+  html[data-intro="play"] [data-hero-live] {
+    visibility: hidden;
   }
 
   /* Accessible focus ring used across interactive elements. */
