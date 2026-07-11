@@ -14,9 +14,11 @@ import type { Product } from "@/types/product";
 export function SubcategoryFilter({
   products,
   subcategories,
+  flavorLabelsBySlug,
 }: {
   products: Product[];
   subcategories: NavNode[];
+  flavorLabelsBySlug?: Record<string, string[]>;
 }) {
   const [active, setActive] = useState<string | null>(null); // null = "Todos"
 
@@ -61,7 +63,7 @@ export function SubcategoryFilter({
         ))}
       </div>
 
-      <ProductGrid products={filtered} />
+      <ProductGrid products={filtered} flavorLabelsBySlug={flavorLabelsBySlug} />
     </div>
   );
 }

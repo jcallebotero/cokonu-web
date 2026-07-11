@@ -16,9 +16,21 @@ import type { Product } from "@/types/product";
  *   same card WITHOUT being nested inside the anchor (valid, accessible HTML).
  * - Out of stock: an "Agotado" overlay + a disabled button; the card still
  *   links to the product page.
+ * - `flavorLabels` (optional): subtle, non-clickable indicator chips for the
+ *   product's photo-derived flavor variants. Only the category page passes them;
+ *   an empty/absent list renders no chips (unchanged card).
  */
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  flavorLabels,
+}: {
+  product: Product;
+  flavorLabels?: string[];
+}) {
   const { addItem } = useCart();
+  // Up to 4 flavor chips in a single row; a "+N" chip stands in for the rest.
+  const shownFlavors = flavorLabels?.slice(0, 4) ?? [];
+  const extraFlavors = (flavorLabels?.length ?? 0) - shownFlavors.length;
   // Null stock = unknown inventory → always available, never "Agotado".
   const outOfStock = product.stock !== null && product.stock <= 0;
   // Card shows the single-unit (qty 1) price; null = quote by WhatsApp.
@@ -31,8 +43,7 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-surface ring-1 ring-line/60">
         <ProductImage
-          department={product.department}
-          code={product.code}
+          src={product.imageSrc}
           alt={product.name}
           className="transition-transform duration-300 group-hover:scale-105"
         />
@@ -101,6 +112,26 @@ export function ProductCard({ product }: { product: Product }) {
             {outOfStock ? "Agotado" : "Agregar"}
           </button>
         </div>
+
+        {/* Flavor indicator chips — subtle, square, NOT clickable. One row; up
+            to 4 labels + a "+N" chip for the rest. Absent when no flavors. */}
+        {shownFlavors.length > 0 && (
+          <div className="mt-2 flex gap-1 overflow-hidden">
+            {shownFlavors.map((label) => (
+              <span
+                key={label}
+                className="shrink-0 whitespace-nowrap bg-green-tint px-1.5 py-0.5 text-[11px] leading-tight text-green-deep"
+              >
+                {label}
+              </span>
+            ))}
+            {extraFlavors > 0 && (
+              <span className="shrink-0 whitespace-nowrap bg-green-tint px-1.5 py-0.5 text-[11px] leading-tight text-green-deep">
+                +{extraFlavors}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </article>
   );

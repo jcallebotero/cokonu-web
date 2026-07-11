@@ -120,8 +120,7 @@ export function CartDrawer() {
                     className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
                   >
                     <ProductImage
-                      department={product.department}
-                      code={product.code}
+                      src={product.imageSrc}
                       alt={product.name}
                       sizes="80px"
                     />

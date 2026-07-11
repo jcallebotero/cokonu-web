@@ -11,9 +11,17 @@ import { cn } from "@/lib/cn";
  * (z-50), so it never blocks the drawer or the mega-menu.
  *
  * `hidden` fades it out (e.g. once the reveal footer is uncovered) so it never
- * awkwardly overlaps the footer content.
+ * awkwardly overlaps the footer content. On `home` it's lifted up and aligned
+ * to the hero CTA pill's left inset so the two stack cleanly instead of
+ * overlapping at the bottom-left corner.
  */
-export function WhatsAppFab({ hidden = false }: { hidden?: boolean }) {
+export function WhatsAppFab({
+  hidden = false,
+  home = false,
+}: {
+  hidden?: boolean;
+  home?: boolean;
+}) {
   return (
     <a
       href={whatsappLink()}
@@ -21,7 +29,10 @@ export function WhatsAppFab({ hidden = false }: { hidden?: boolean }) {
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
       className={cn(
-        "is-round fixed bottom-5 left-5 z-30 block h-12 w-12 overflow-hidden shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] transition-all duration-200 hover:scale-105 sm:bottom-6 sm:left-6 sm:h-14 sm:w-14",
+        "is-round fixed z-30 block h-12 w-12 overflow-hidden shadow-[0_6px_20px_-4px_rgba(0,0,0,0.35)] transition-all duration-200 hover:scale-105 sm:h-14 sm:w-14",
+        home
+          ? "bottom-[86px] left-[30px] lg:bottom-[168px] lg:left-[68px]"
+          : "bottom-5 left-5 sm:bottom-6 sm:left-6",
         hidden ? "pointer-events-none opacity-0" : "opacity-100",
       )}
     >

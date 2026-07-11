@@ -24,9 +24,9 @@ import { cn } from "@/lib/cn";
 export function HeroPanel() {
   const scope = useIntroCascade({
     fromY: 32,
-    stagger: 0.08,
-    startDelay: 0.08,
-    duration: 0.4,
+    stagger: 0.14,
+    startDelay: 0.1,
+    duration: 1.05,
   });
   const { mode } = useHeroMode();
   const cookie = mode === "cookie";
@@ -36,7 +36,7 @@ export function HeroPanel() {
       ref={scope}
       data-hero-panel
       className={cn(
-        "hero-panel relative flex min-h-[calc(100svh-2rem)] w-full flex-col overflow-hidden [container-type:inline-size] transition-colors duration-[400ms] ease-out sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100svh-5.5rem)]",
+        "hero-panel relative flex min-h-[calc(100svh-5.5rem)] w-full flex-col overflow-hidden [container-type:inline-size] transition-colors duration-[400ms] ease-out",
         cookie ? "bg-green" : "bg-pink",
       )}
     >

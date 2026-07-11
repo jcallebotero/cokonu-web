@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import {
+  HomeMobileHeader,
   HomeOverlayHeader,
   HomeStickyHeader,
 } from "@/components/layout/HomeHeaders";
@@ -103,8 +104,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           scroll-handoff sticky header (see HomeHeaders.tsx). */}
       {isHome ? (
         <>
+          {/* Desktop: scroll-handoff sticky + integrated overlay (inside panel).
+              Mobile: one always-visible fixed header. Each is CSS-gated to its
+              breakpoint. */}
           <HomeStickyHeader />
           <HomeOverlayHeader />
+          <HomeMobileHeader />
         </>
       ) : (
         <Header />
@@ -131,8 +136,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Slide-in cart panel, controlled via CartContext. */}
       <CartDrawer />
 
-      {/* Floating WhatsApp button (bottom-left, all pages). */}
-      <WhatsAppFab hidden={fabHidden} />
+      {/* Floating WhatsApp button (bottom-left; lifted above the CTA pill on
+          home so they don't collide). */}
+      <WhatsAppFab hidden={fabHidden} home={isHome} />
     </HeroModeProvider>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { departments, findCategory } from "@/config/navigation";
 import { getProductsByCategory } from "@/lib/catalog";
+import { getFlavorLabels } from "@/lib/productVariants";
 import { PageHeading } from "@/components/layout/PageHeading";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { SubcategoryFilter } from "@/components/product/SubcategoryFilter";
@@ -41,6 +42,16 @@ export default async function CategoryPage({
   const products = await getProductsByCategory(department, category);
   const subcategories = cat.children ?? [];
 
+  // Discover flavor variants from the photo files (main + <code>-<flavor>.<ext>)
+  // for this category's products. The department directory is read ONCE
+  // (memoized in lib/productVariants.ts) and filtered per code in memory — not
+  // one readdir per card. Only products WITH flavors get an entry → chips.
+  const flavorLabelsBySlug: Record<string, string[]> = {};
+  for (const p of products) {
+    const labels = getFlavorLabels(p.department, p.code);
+    if (labels.length > 0) flavorLabelsBySlug[p.slug] = labels;
+  }
+
   return (
     <div className="w-full px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8 lg:px-8">
       {/* Breadcrumb to the parent department */}
@@ -56,9 +67,13 @@ export default async function CategoryPage({
       <PageHeading title={cat.label} />
 
       {subcategories.length > 0 ? (
-        <SubcategoryFilter products={products} subcategories={subcategories} />
+        <SubcategoryFilter
+          products={products}
+          subcategories={subcategories}
+          flavorLabelsBySlug={flavorLabelsBySlug}
+        />
       ) : (
-        <ProductGrid products={products} />
+        <ProductGrid products={products} flavorLabelsBySlug={flavorLabelsBySlug} />
       )}
     </div>
   );

@@ -1,69 +1,228 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { HeaderRow } from "@/components/layout/HeaderRow";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { SearchPanel } from "@/components/search/SearchPanel";
+import { useCart } from "@/context/CartContext";
+import { useHeroMode } from "@/components/home/HeroModeContext";
 import { useIntroCascade } from "@/components/home/useIntroCascade";
+import { SearchIcon, CartIcon, MenuIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 /**
- * Home-only header, split in two cooperating pieces:
+ * Home-only header. Desktop and mobile diverge:
  *
- *  - HomeOverlayHeader — the INTEGRATED row: transparent, sits on top of the
- *    green hero panel at the very top of the page, and simply scrolls away with
- *    the page. Rendered at the root (z-40, absolute-in-document) so its search
- *    bar / mega-menu clear the z-30 search scrim. Drops in during ACT 4.
+ *  - Desktop (lg+): a minimal INTEGRATED header INSIDE the panel — the mascot
+ *    silhouette top-left + the search/cart chips top-right (no logo, no nav) —
+ *    that scrolls away, plus the scroll-handoff sticky header (full nav) that
+ *    slides in past the threshold. HomeOverlayHeader + HomeStickyHeader.
  *
- *  - HomeStickyHeader — the normal white header + marquee, hidden above the
- *    viewport until you scroll past ~65% of the hero, then it slides down and
- *    takes over (with the usual hide-on-down / show-on-up afterward).
+ *  - Mobile (<lg): ONE fixed white header (hamburger / centered coco / chips),
+ *    always visible, no marquee, no handoff. HomeMobileHeader.
+ *
+ * The chip cluster is rendered at the root (z-40) so its search bar clears the
+ * z-30 search scrim; on desktop it's anchored to a box that mirrors the panel's
+ * margins so it sits INSIDE the panel (never on the white frame).
  */
 
 /** Portion of the hero you scroll before the sticky header takes over. */
 const TAKEOVER_FRACTION = 0.5;
 
-export function HomeOverlayHeader() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  // Single unit: the whole row drops in from above during ACT 4.
-  const scope = useIntroCascade({
-    fromY: -24,
-    stagger: 0,
-    startDelay: 0,
-    duration: 0.45,
-  });
+/** Mode-tinted search + cart chips (shared by desktop overlay + mobile fixed). */
+function HeaderChips({
+  onOpenSearch,
+  pill = false,
+}: {
+  onOpenSearch: () => void;
+  pill?: boolean;
+}) {
+  const { itemCount, openCart } = useCart();
+  const { mode } = useHeroMode();
+  const tint = mode === "cookie" ? "bg-green-tint" : "bg-pink-tint";
+  const ink = mode === "cookie" ? "text-green-deep" : "text-pink-dark";
 
   return (
-    <div ref={scope}>
-      {/* Absolute-in-document so it scrolls away with the panel; insets match
-          the hero wrapper's margins so it aligns with the panel's top edge. */}
-      <div
-        data-cascade
-        className="absolute inset-x-3 top-3 z-40 lg:inset-x-3.5 lg:top-3.5"
-      >
-        {/* `relative` positions the search bar (SearchPanel is absolute
-            top-full) directly below the row. */}
-        <div className="relative">
-          <HeaderRow
-            variant="overlay"
-            onOpenMobile={() => setMobileOpen(true)}
-            onOpenSearch={() => setSearchOpen(true)}
-          />
-          <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
-        </div>
-      </div>
+    <div className="flex items-center gap-2 sm:gap-3">
+      {pill ? (
+        <button
+          type="button"
+          aria-label="Buscar"
+          onClick={onOpenSearch}
+          className={cn(
+            "is-round inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors duration-[400ms] ease-out hover:brightness-95",
+            tint,
+            ink,
+          )}
+        >
+          <SearchIcon width={18} height={18} />
+          Buscar
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label="Buscar"
+          onClick={onOpenSearch}
+          className={cn(
+            "is-round flex h-9 w-9 items-center justify-center transition-colors duration-[400ms] ease-out hover:brightness-95",
+            tint,
+            ink,
+          )}
+        >
+          <SearchIcon />
+        </button>
+      )}
 
-      {/* Outside the transformed/anchored row so its fixed positioning resolves
-          against the viewport. */}
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <button
+        type="button"
+        onClick={openCart}
+        aria-label={`Abrir carrito, ${itemCount} artículos`}
+        className={cn(
+          "is-round relative flex h-9 w-9 items-center justify-center transition-colors duration-[400ms] ease-out hover:brightness-95 sm:h-10 sm:w-10",
+          tint,
+          ink,
+        )}
+      >
+        <CartIcon />
+        <span
+          aria-hidden
+          className="cart-count-badge absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center bg-green-dark text-[10px] font-medium leading-none text-surface"
+        >
+          {itemCount}
+        </span>
+      </button>
     </div>
   );
 }
 
-export function HomeStickyHeader() {
+/** Coconut silhouette (top-left), filled with the mode tint via a CSS mask. */
+function HeroSilhouette() {
+  const { mode } = useHeroMode();
+  const maskStyle: CSSProperties = {
+    maskImage: "url(/brand/coko_header_hero.png)",
+    WebkitMaskImage: "url(/brand/coko_header_hero.png)",
+    maskSize: "contain",
+    WebkitMaskSize: "contain",
+    maskRepeat: "no-repeat",
+    WebkitMaskRepeat: "no-repeat",
+    maskPosition: "center",
+    WebkitMaskPosition: "center",
+  };
+  return (
+    <div
+      aria-hidden
+      style={maskStyle}
+      className={cn(
+        "aspect-[649/618] h-14 transition-colors duration-[400ms] ease-out xl:h-16",
+        mode === "cookie" ? "bg-green-tint" : "bg-pink-tint",
+      )}
+    />
+  );
+}
+
+/** Desktop (lg+): silhouette + chips inside the panel, scrolls away. */
+export function HomeOverlayHeader() {
+  const [searchOpen, setSearchOpen] = useState(false);
+  // Silhouette + chips are the ACT 4 TOP group: drop in from above.
+  const scope = useIntroCascade({
+    fromY: -24,
+    stagger: 0.14,
+    startDelay: 0,
+    duration: 1.05,
+  });
+
+  return (
+    <div ref={scope} className="hidden lg:block">
+      {/* Box mirrors the panel's lg margins (p-11 = 44px) so its children inset
+          from the panel edge, never the white frame. Absolute-in-document, so it
+          scrolls away with the panel. z-40 clears the z-30 search scrim. */}
+      <div className="absolute left-11 right-11 top-11 z-40">
+        <div className="relative">
+          {/* Inset ~24px from the panel edge, matching the corner pills. */}
+          <div className="flex items-start justify-between px-6 pt-6">
+            <div data-cascade>
+              <HeroSilhouette />
+            </div>
+            <div data-cascade>
+              <HeaderChips pill onOpenSearch={() => setSearchOpen(true)} />
+            </div>
+          </div>
+          {/* Search bar spans the panel width, anchored below the chip row. */}
+          <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Mobile (<lg): one fixed white header, always visible. */
+export function HomeMobileHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  // The whole white bar drops in with the ACT 4 TOP group.
+  const scope = useIntroCascade({
+    fromY: -24,
+    stagger: 0,
+    startDelay: 0,
+    duration: 1.05,
+  });
+
+  return (
+    <>
+      {/* Transparent fixed wrapper; the white bar lives in the cascade layer so
+          it slides/fades in during ACT 4. */}
+      <header className="fixed inset-x-0 top-0 z-40 lg:hidden">
+        <div ref={scope}>
+          <div
+            data-cascade
+            className="relative flex h-14 items-center bg-surface px-4 shadow-[0_1px_0_rgba(0,0,0,0.06)]"
+          >
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Abrir menú"
+              className="p-2 text-ink hover:bg-green-tint"
+            >
+              <MenuIcon />
+            </button>
+
+            {/* Centered logo (absolute so it doesn't drift with side content). */}
+            <Link
+              href="/"
+              aria-label="Cokonu — ir al inicio"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              <Image
+                src="/brand/logo_coko.png"
+                alt="Cokonu"
+                width={44}
+                height={44}
+                priority
+                className="h-11 w-11 object-contain"
+              />
+            </Link>
+
+            <div className="ml-auto">
+              <HeaderChips onOpenSearch={() => setSearchOpen(true)} />
+            </div>
+          </div>
+        </div>
+
+        {/* Anchored to the fixed wrapper (not the transformed cascade layer). */}
+        <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
+      </header>
+
+      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+    </>
+  );
+}
+
+/** Desktop (lg+): the normal white header + marquee, hidden until the handoff. */
+export function HomeStickyHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [shown, setShown] = useState(false);
 
@@ -115,25 +274,22 @@ export function HomeStickyHeader() {
   }, []);
 
   return (
-    <>
-      <div
-        className={cn(
-          "fixed inset-x-0 top-0 z-40 transition-[transform,opacity] duration-[350ms] ease-out",
-          shown ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
-        )}
-      >
-        <AnnouncementBar />
-        <header className="relative border-b border-line bg-bg/90 backdrop-blur">
-          <HeaderRow
-            variant="solid"
-            onOpenMobile={() => setMobileOpen(true)}
-            onOpenSearch={() => setSearchOpen(true)}
-          />
-          <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
-        </header>
-      </div>
-
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
-    </>
+    // Desktop only — mobile uses the fixed HomeMobileHeader instead.
+    <div
+      className={cn(
+        "fixed inset-x-0 top-0 z-40 hidden transition-[transform,opacity] duration-[350ms] ease-out lg:block",
+        shown ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
+      )}
+    >
+      <AnnouncementBar />
+      <header className="relative border-b border-line bg-bg/90 backdrop-blur">
+        <HeaderRow
+          variant="solid"
+          onOpenMobile={() => {}}
+          onOpenSearch={() => setSearchOpen(true)}
+        />
+        <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
+      </header>
+    </div>
   );
 }

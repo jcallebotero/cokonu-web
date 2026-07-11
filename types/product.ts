@@ -39,6 +39,15 @@ export interface Product {
    */
   stock: number | null;
   /**
+   * Fully-resolved product image URL, computed SERVER-SIDE in lib/catalog.ts via
+   * lib/productImage.ts (`productImageSrc`). Carries an mtime cache-buster
+   * (`?v=<mtimeMs>`) so a replaced photo busts the browser cache; a product with
+   * no photo yet gets the plain path (no `?v`) and falls back to the placeholder.
+   * Passed to the client <ProductImage> as its `src` prop — never recomputed on
+   * the client (that would need `fs`).
+   */
+  imageSrc: string;
+  /**
    * @deprecated Images are derived from `code` via lib/productImage.ts.
    * Kept optional and unused for backward compatibility / future overrides.
    */

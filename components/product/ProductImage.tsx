@@ -3,27 +3,28 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { productImageSrc } from "@/lib/productImage";
 
 /**
- * Product image. The source is DERIVED from the product's department + code
- * (lib/productImage.ts) — never a stored path. If the file is missing
- * (onError), it shows a neutral on-brand placeholder (faint coconut on
- * green-tint) so a not-yet-uploaded photo never breaks the grid layout.
+ * Product image. The `src` is RESOLVED SERVER-SIDE (lib/catalog.ts via
+ * lib/productImage.ts) and passed in as `product.imageSrc` — it already carries
+ * the mtime cache-buster (`?v=…`). This component never builds the path itself,
+ * so `fs` stays out of the client bundle.
+ *
+ * If the file is missing (onError) or no `src` was provided, it shows a neutral
+ * on-brand placeholder (faint coconut on green-tint) so a not-yet-uploaded photo
+ * never breaks the grid layout.
  *
  * Must be placed inside a positioned container with a defined size
  * (e.g. `relative aspect-square`) because it renders with `fill`.
  */
 export function ProductImage({
-  department,
-  code,
+  src,
   alt,
   sizes,
   priority,
   className,
 }: {
-  department: string;
-  code: string;
+  src?: string;
   alt: string;
   sizes?: string;
   priority?: boolean;
@@ -31,7 +32,7 @@ export function ProductImage({
 }) {
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (failed || !src) {
     return (
       <div
         aria-hidden
@@ -50,7 +51,7 @@ export function ProductImage({
 
   return (
     <Image
-      src={productImageSrc(department, code)}
+      src={src}
       alt={alt}
       fill
       sizes={sizes ?? "(max-width: 768px) 50vw, 25vw"}

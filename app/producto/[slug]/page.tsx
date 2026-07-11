@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { findCategory, findSubcategory } from "@/config/navigation";
 import { getAllProducts, getProductBySlug } from "@/lib/catalog";
-import { ProductImage } from "@/components/product/ProductImage";
+import { getProductVariants } from "@/lib/productVariants";
+import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchase } from "@/components/product/ProductPurchase";
 
 type Params = { slug: string };
@@ -40,9 +41,9 @@ export default async function ProductPage({
     : null;
   const backNode = subcategory ?? category;
 
-  // Gallery is structured to support multiple images later; one for now.
-  // Images are derived from the product's department + code (lib/productImage).
-  const gallery = [{ department: product.department, code: product.code }];
+  // Flavor variants are discovered from the photo files (main + any
+  // <code>-<flavor>.<ext>), server-side, and passed to the client gallery.
+  const variants = getProductVariants(product.department, product.code);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8">
@@ -66,34 +67,9 @@ export default async function ProductPage({
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        {/* Gallery */}
+        {/* Gallery — large image + flavor thumbnail strip (client). */}
         <div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface ring-1 ring-line/60">
-            <ProductImage
-              department={gallery[0].department}
-              code={gallery[0].code}
-              alt={product.name}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-            />
-          </div>
-          {/* Thumbnail strip — rendered only when there are multiple images. */}
-          {gallery.length > 1 && (
-            <ul className="mt-3 flex gap-3">
-              {gallery.map((img, i) => (
-                <li
-                  key={`${img.department}-${img.code}`}
-                  className="relative aspect-square w-20 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
-                >
-                  <ProductImage
-                    department={img.department}
-                    code={img.code}
-                    alt={`${product.name} ${i + 1}`}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+          <ProductGallery variants={variants} alt={product.name} />
         </div>
 
         {/* Info */}

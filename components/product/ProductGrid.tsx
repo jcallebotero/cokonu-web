@@ -5,8 +5,18 @@ import type { Product } from "@/types/product";
  * Responsive product grid: 2 columns on mobile up to 5 on wide desktops, with
  * generous gaps on the white page background. Renders a friendly empty state
  * when there are no products.
+ *
+ * `flavorLabelsBySlug` (optional): a slug → flavor-label[] map so each card can
+ * show its variant chips. Only the category page provides it; other callers
+ * (home/search/department) omit it → no chips.
  */
-export function ProductGrid({ products }: { products: Product[] }) {
+export function ProductGrid({
+  products,
+  flavorLabelsBySlug,
+}: {
+  products: Product[];
+  flavorLabelsBySlug?: Record<string, string[]>;
+}) {
   if (products.length === 0) {
     return (
       <div className="bg-green-tint/40 px-6 py-16 text-center">
@@ -22,7 +32,11 @@ export function ProductGrid({ products }: { products: Product[] }) {
     <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((product) => (
         // Slug is unique across the whole catalog (department + code identity).
-        <ProductCard key={product.slug} product={product} />
+        <ProductCard
+          key={product.slug}
+          product={product}
+          flavorLabels={flavorLabelsBySlug?.[product.slug]}
+        />
       ))}
     </div>
   );

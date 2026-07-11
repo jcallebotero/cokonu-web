@@ -23,9 +23,9 @@ const FAILSAFE_MS = 6500;
  */
 export function useIntroCascade({
   fromY,
-  stagger: step = 0.08,
+  stagger: step = 0.13,
   startDelay = 0,
-  duration = 0.4,
+  duration = 1.05,
 }: {
   fromY: number;
   stagger?: number;
