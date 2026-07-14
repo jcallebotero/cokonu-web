@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Términos y Condiciones" };
 
 export default function TerminosPage() {
   return (
-    <LegalPage title="Términos y Condiciones" lastUpdated="[COMPLETAR: fecha]">
+    <LegalPage title="Términos y Condiciones">
       <LegalSection title="1. Identificación del titular">
         <p>
           Este sitio es operado por Cokonu — Confitería y Papelería, Sergio

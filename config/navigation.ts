@@ -84,6 +84,11 @@ const departmentsInput: NavNodeInput[] = [
         image: "/brand/coko_galleta.png",
       },
       { label: "Mecatos", slug: "mecatos", image: "/brand/coko_mecato.png" },
+      {
+        label: "Para bebidas",
+        slug: "para-bebidas",
+        image: "/brand/coko_bebidas.png",
+      },
     ],
   },
   {

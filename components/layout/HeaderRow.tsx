@@ -15,13 +15,14 @@ import { cn } from "@/lib/cn";
  * Presentational only: the parent owns the mobile-menu / search state and
  * renders <SearchPanel> and <MobileMenu> at the right stacking level. Two
  * variants:
- *  - "solid"   → the normal white sticky header (dark logo with mascot; search
- *                lives in the center nav; plain search/cart controls).
+ *  - "solid"   → the normal white header. DESKTOP: dark logo lockup left, nav +
+ *                Buscar in the center, a plain cart control right. MOBILE: matches
+ *                the home mobile header — hamburger left, the coconut logo
+ *                CENTERED (44px), and circular brand-green-tint search + cart
+ *                chips on the right.
  *  - "overlay" → transparent row on the green/pink hero panel (home top). Swaps
  *                to the standalone COKONU wordmark and restyles the right-side
- *                controls as voldog chips: a Buscar pill + a cart circle, both
- *                in the current mode tint (green ⇄ pink). Search moves out of the
- *                nav into this cluster.
+ *                controls as voldog chips in the current mode tint (green ⇄ pink).
  */
 export function HeaderRow({
   variant = "solid",
@@ -39,9 +40,19 @@ export function HeaderRow({
   const chipTint = mode === "cookie" ? "bg-green-tint" : "bg-pink-tint";
   const chipInk = mode === "cookie" ? "text-green-deep" : "text-pink-dark";
 
+  const cartLabel = `Abrir carrito, ${itemCount} artículos`;
+  const cartBadge = (
+    <span
+      aria-hidden
+      className="cart-count-badge absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center bg-green-dark text-[10px] font-medium leading-none text-surface"
+    >
+      {itemCount}
+    </span>
+  );
+
   return (
-    <div className="flex h-14 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:h-16 lg:px-8">
-      {/* Left (anchored): hamburger (mobile) + logo */}
+    <div className="relative flex h-14 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:h-16 lg:px-8">
+      {/* Left (anchored): hamburger (mobile) + desktop logo lockup. */}
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
@@ -52,14 +63,14 @@ export function HeaderRow({
           <MenuIcon />
         </button>
 
+        {/* Desktop logo (mobile uses the centered logo below). Overlay uses the
+            standalone COKONU mark (no mascot) so it reads on green/pink; the
+            solid header keeps the full logo lockup. */}
         <Link
           href="/"
           aria-label="Cokonu — ir al inicio"
-          className="flex items-center"
+          className="hidden items-center lg:flex"
         >
-          {/* Desktop wordmark. Overlay uses the standalone COKONU mark (no
-              mascot) so it reads on green/pink and doesn't echo the giant hero
-              mascot; the solid header keeps the full logo lockup. */}
           <Image
             src={
               overlay
@@ -72,21 +83,29 @@ export function HeaderRow({
             priority
             className={
               overlay
-                ? "hidden h-9 w-auto object-contain lg:block xl:h-10"
-                : "hidden h-10 w-auto object-contain lg:block xl:h-12"
+                ? "h-9 w-auto object-contain xl:h-10"
+                : "h-10 w-auto object-contain xl:h-12"
             }
-          />
-          {/* Coconut character on mobile (reads on both white and green/pink). */}
-          <Image
-            src="/brand/logo_coko.png"
-            alt="Cokonu"
-            width={40}
-            height={40}
-            priority
-            className="h-9 w-9 object-contain lg:hidden"
           />
         </Link>
       </div>
+
+      {/* Mobile only: the coconut logo, centered — same asset + size as the home
+          mobile header. Absolute so it stays centered regardless of side items. */}
+      <Link
+        href="/"
+        aria-label="Cokonu — ir al inicio"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden"
+      >
+        <Image
+          src="/brand/logo_coko.png"
+          alt="Cokonu"
+          width={44}
+          height={44}
+          priority
+          className="h-11 w-11 object-contain"
+        />
+      </Link>
 
       {/* Center (desktop): departments (+ search on the solid header). */}
       <HeaderNav variant={variant} onSearch={onOpenSearch} />
@@ -128,7 +147,7 @@ export function HeaderRow({
             <button
               type="button"
               onClick={openCart}
-              aria-label={`Abrir carrito, ${itemCount} artículos`}
+              aria-label={cartLabel}
               className={cn(
                 "is-round relative flex h-9 w-9 items-center justify-center transition-colors duration-[400ms] ease-out hover:brightness-95 sm:h-10 sm:w-10",
                 chipTint,
@@ -136,38 +155,39 @@ export function HeaderRow({
               )}
             >
               <CartIcon />
-              <span
-                aria-hidden
-                className="cart-count-badge absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center bg-green-dark text-[10px] font-medium leading-none text-surface"
-              >
-                {itemCount}
-              </span>
+              {cartBadge}
             </button>
           </>
         ) : (
           <>
+            {/* Mobile: circular brand-green-tint chips (match the home header). */}
             <button
               type="button"
               aria-label="Buscar"
               onClick={onOpenSearch}
-              className="p-2 text-ink hover:bg-green-tint lg:hidden"
+              className="is-round flex h-9 w-9 items-center justify-center bg-green-tint text-green-deep transition-colors duration-[400ms] ease-out hover:brightness-95 lg:hidden"
             >
               <SearchIcon />
             </button>
-
             <button
               type="button"
               onClick={openCart}
-              aria-label={`Abrir carrito, ${itemCount} artículos`}
-              className="relative p-2 text-ink hover:bg-green-tint"
+              aria-label={cartLabel}
+              className="is-round relative flex h-9 w-9 items-center justify-center bg-green-tint text-green-deep transition-colors duration-[400ms] ease-out hover:brightness-95 sm:h-10 sm:w-10 lg:hidden"
             >
               <CartIcon />
-              <span
-                aria-hidden
-                className="cart-count-badge absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center bg-green-dark text-[10px] font-medium leading-none text-surface"
-              >
-                {itemCount}
-              </span>
+              {cartBadge}
+            </button>
+
+            {/* Desktop: plain cart control (search lives in the center nav). */}
+            <button
+              type="button"
+              onClick={openCart}
+              aria-label={cartLabel}
+              className="relative hidden p-2 text-ink hover:bg-green-tint lg:block"
+            >
+              <CartIcon />
+              {cartBadge}
             </button>
           </>
         )}

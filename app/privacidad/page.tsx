@@ -12,10 +12,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <LegalPage
-      title="Política de Privacidad y Tratamiento de Datos Personales"
-      lastUpdated="[COMPLETAR: fecha]"
-    >
+    <LegalPage title="Política de Privacidad y Tratamiento de Datos Personales">
       <p>
         En cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás
         normas concordantes de Colombia, Cokonu informa su política de

@@ -40,19 +40,14 @@ export function WaLink() {
  */
 export function LegalPage({
   title,
-  lastUpdated,
   children,
 }: {
   title: string;
-  lastUpdated?: string;
   children: ReactNode;
 }) {
   return (
     <div className="w-full px-4 pb-16 pt-6 sm:px-6 sm:pb-20 sm:pt-8 lg:px-8">
-      <PageHeading
-        title={title}
-        subtitle={lastUpdated ? `Última actualización: ${lastUpdated}` : undefined}
-      />
+      <PageHeading title={title} />
       <div className="max-w-3xl space-y-8 text-sm leading-relaxed text-ink-soft">
         {children}
       </div>

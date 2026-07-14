@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 /**
  * Desktop department navigation.
  *
- * - Confitería opens a full-width image mega-menu (5 cards) on CLICK.
+ * - Confitería opens a full-width image mega-menu (6 cards) on CLICK.
  * - Papelería opens a small text dropdown on click.
  * Only one menu is open at a time; both close on outside-click and Escape.
  * Data comes from config/navigation.ts (single source of truth), including the
@@ -145,7 +145,7 @@ function Trigger({
   );
 }
 
-/** Confitería — full-width image mega-menu (5 cards). */
+/** Confitería — full-width image mega-menu (6 cards: 5 categories + Ver todo). */
 function ConfiteriaMenu({
   dept,
   open,
@@ -182,7 +182,7 @@ function ConfiteriaMenu({
         )}
       >
         <div className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {categories.map((cat) => (
               <Link
                 key={cat.slug}

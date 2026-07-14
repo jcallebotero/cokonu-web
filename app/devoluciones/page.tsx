@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Cambios y Devoluciones" };
 
 export default function DevolucionesPage() {
   return (
-    <LegalPage title="Cambios y Devoluciones" lastUpdated="[COMPLETAR: fecha]">
+    <LegalPage title="Cambios y Devoluciones">
       <p>
         De acuerdo con el Estatuto del Consumidor (Ley 1480 de 2011), el cliente
         tiene derechos frente a los productos adquiridos.

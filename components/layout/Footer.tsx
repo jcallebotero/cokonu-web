@@ -7,11 +7,11 @@ import { siteConfig, whatsappLink } from "@/config/site";
  * Site footer.
  *
  * - Newsletter signup (left) — UI only, no submit logic.
- * - Social icons (right) — custom PNGs used as-is: WhatsApp (real link) and
- *   TikTok (placeholder "#").
+ * - Social icons (right) — custom PNGs used as-is: WhatsApp, TikTok, Instagram
+ *   (all real links, open in a new tab).
  * - Department nav (from config/navigation.ts, single source of truth).
  * - Legal/info links to placeholder pages.
- * - Business identity line with placeholder NIT.
+ * - Business identity line (NIT).
  * - Full-width "COKONU" hero wordmark in brand pink (fluid vw size).
  *
  * All supporting text is intentionally small/refined; only the COKONU wordmark
@@ -63,13 +63,30 @@ export function Footer() {
                 />
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@cokonuconfitesypapeles"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="TikTok"
                 className="block h-8 w-8 overflow-hidden transition-transform hover:scale-105"
               >
                 <Image
                   src="/brand/tiktok_cokonu.png"
                   alt="TikTok"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                />
+              </a>
+              <a
+                href="https://www.instagram.com/cokonuconfiteria"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram de Cokonu"
+                className="block h-8 w-8 overflow-hidden transition-transform hover:scale-105"
+              >
+                <Image
+                  src="/brand/instagram_cokonu.png"
+                  alt="Instagram de Cokonu"
                   width={32}
                   height={32}
                   className="h-full w-full object-cover"
@@ -137,9 +154,9 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Business identity line — placeholder NIT. */}
+        {/* Business identity line. */}
         <p className="mt-8 font-meta text-[10px] text-ink-soft">
-          {siteConfig.storeName} · NIT: 000000000-0 · {siteConfig.city}
+          {siteConfig.storeName} · NIT: 98538341 · {siteConfig.city}
         </p>
       </div>
 

@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,10 +16,10 @@ import { cn } from "@/lib/cn";
 /**
  * Home-only header. Desktop and mobile diverge:
  *
- *  - Desktop (lg+): a minimal INTEGRATED header INSIDE the panel — the mascot
- *    silhouette top-left + the search/cart chips top-right (no logo, no nav) —
- *    that scrolls away, plus the scroll-handoff sticky header (full nav) that
- *    slides in past the threshold. HomeOverlayHeader + HomeStickyHeader.
+ *  - Desktop (lg+): a minimal INTEGRATED header INSIDE the panel — just the
+ *    search/cart chips top-right (no logo, no nav; the top-left is intentionally
+ *    empty) — that scrolls away, plus the scroll-handoff sticky header (full nav)
+ *    that slides in past the threshold. HomeOverlayHeader + HomeStickyHeader.
  *
  *  - Mobile (<lg): ONE fixed white header (hamburger / centered coco / chips),
  *    always visible, no marquee, no handoff. HomeMobileHeader.
@@ -99,40 +98,14 @@ function HeaderChips({
   );
 }
 
-/** Coconut silhouette (top-left), filled with the mode tint via a CSS mask. */
-function HeroSilhouette() {
-  const { mode } = useHeroMode();
-  const maskStyle: CSSProperties = {
-    maskImage: "url(/brand/coko_header_hero.png)",
-    WebkitMaskImage: "url(/brand/coko_header_hero.png)",
-    maskSize: "contain",
-    WebkitMaskSize: "contain",
-    maskRepeat: "no-repeat",
-    WebkitMaskRepeat: "no-repeat",
-    maskPosition: "center",
-    WebkitMaskPosition: "center",
-  };
-  return (
-    <div
-      aria-hidden
-      style={maskStyle}
-      className={cn(
-        "aspect-[649/618] h-14 transition-colors duration-[400ms] ease-out xl:h-16",
-        mode === "cookie" ? "bg-green-tint" : "bg-pink-tint",
-      )}
-    />
-  );
-}
-
-/** Desktop (lg+): silhouette + chips inside the panel, scrolls away. */
+/** Desktop (lg+): the top-right search/cart chips inside the panel, scroll away. */
 export function HomeOverlayHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
-  // Silhouette + chips are the ACT 4 TOP group: drop in from above.
+  // The chips are the ACT 4 TOP group: drop in from above, fading in TOGETHER
+  // with the bottom group (same startDelay, no stagger) over the shared ~2s.
   const scope = useIntroCascade({
-    fromY: -24,
-    stagger: 0.14,
-    startDelay: 0,
-    duration: 1.05,
+    fromY: -14,
+    startDelay: 0.2,
   });
 
   return (
@@ -142,11 +115,8 @@ export function HomeOverlayHeader() {
           scrolls away with the panel. z-40 clears the z-30 search scrim. */}
       <div className="absolute left-11 right-11 top-11 z-40">
         <div className="relative">
-          {/* Inset ~24px from the panel edge, matching the corner pills. */}
-          <div className="flex items-start justify-between px-6 pt-6">
-            <div data-cascade>
-              <HeroSilhouette />
-            </div>
+          {/* Chips only (the top-left silhouette was removed); keep them right. */}
+          <div className="flex items-start justify-end px-6 pt-6">
             <div data-cascade>
               <HeaderChips pill onOpenSearch={() => setSearchOpen(true)} />
             </div>
@@ -163,12 +133,11 @@ export function HomeOverlayHeader() {
 export function HomeMobileHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  // The whole white bar drops in with the ACT 4 TOP group.
+  // The whole white bar drops in with the ACT 4 TOP group, in unison with the
+  // rest (same startDelay, no stagger) over the shared ~2s window.
   const scope = useIntroCascade({
-    fromY: -24,
-    stagger: 0,
-    startDelay: 0,
-    duration: 1.05,
+    fromY: -14,
+    startDelay: 0.2,
   });
 
   return (

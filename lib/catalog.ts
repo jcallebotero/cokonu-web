@@ -2,6 +2,7 @@ import type { DepartmentSlug, Product } from "@/types/product";
 import codeReference from "@/data/chocolatinas.json";
 import { searchProducts } from "@/lib/search";
 import { productImageSrc } from "@/lib/productImage";
+import { basePrice } from "@/lib/pricing";
 
 /**
  * DATA-ACCESS LAYER for the product catalog.
@@ -224,4 +225,64 @@ export async function getFeaturedProducts(): Promise<Product[]> {
  */
 export async function searchCatalog(query: string): Promise<Product[]> {
   return searchProducts(await getSource(), query);
+}
+
+/** Default number of related products to show on a product page. */
+const RELATED_TARGET = 10;
+
+/**
+ * "Sellable" = safe to showcase: has a positive price AND is not out of stock.
+ * Null stock = unknown inventory → treated as available (never "Agotado").
+ */
+function isSellable(product: Product): boolean {
+  const price = basePrice(product);
+  const inStock = product.stock === null || product.stock > 0;
+  return price !== null && price > 0 && inStock;
+}
+
+/** Fisher–Yates shuffle → a NEW array (never mutates the input). */
+function shuffle<T>(input: readonly T[]): T[] {
+  const a = [...input];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Related products for the "También te podría gustar" showcase on a product
+ * page. SERVER-side (runs at SSG/ISR generation), so the random order is baked
+ * into the generated HTML — stable for that generation, rotating on each
+ * revalidation, with no client randomness / hydration mismatch.
+ *
+ * Selection (priority): (a) same department + category first, then (b) top up
+ * from the same department (any category) if short. Only SELLABLE items
+ * (isSellable), the current product excluded, deduped by slug (= department +
+ * code identity), up to `target`. Final display order is fully shuffled.
+ * Returns [] when there are no sellable candidates (caller omits the section).
+ */
+export async function getRelatedProducts(
+  product: Product,
+  target = RELATED_TARGET,
+): Promise<Product[]> {
+  // (a) Same category, sellable, excluding the current product.
+  const sameCategory = (
+    await getProductsByCategory(product.department, product.category)
+  ).filter((p) => p.slug !== product.slug && isSellable(p));
+
+  const picked = shuffle(sameCategory).slice(0, target);
+
+  // (b) Top up from the whole department when the category didn't fill up.
+  if (picked.length < target) {
+    const taken = new Set(picked.map((p) => p.slug));
+    taken.add(product.slug);
+    const deptTopUp = (
+      await getProductsByDepartment(product.department)
+    ).filter((p) => !taken.has(p.slug) && isSellable(p));
+    picked.push(...shuffle(deptTopUp).slice(0, target - picked.length));
+  }
+
+  // Randomize the final display order (still server-computed → stable per gen).
+  return shuffle(picked);
 }

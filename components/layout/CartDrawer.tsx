@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCart } from "@/context/CartContext";
+import { useCart, aggregateQtyBySlug } from "@/context/CartContext";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { ProductImage } from "@/components/product/ProductImage";
 import { QuoteButton } from "@/components/order/QuoteButton";
@@ -49,6 +49,9 @@ export function CartDrawer() {
   }, [isOpen, closeCart]);
 
   const isEmpty = items.length === 0;
+  // Volume tier is looked up on the CODE's total quantity (summed across all of
+  // its flavor lines), so every flavor line of a code shares one tier.
+  const codeTotals = aggregateQtyBySlug(items);
 
   return (
     <div
@@ -111,17 +114,24 @@ export function CartDrawer() {
             </div>
           ) : (
             <ul className="space-y-5">
-              {items.map(({ product, quantity }) => (
-                <li key={product.slug} className="flex gap-3">
-                  {/* Thumbnail (links to product page) */}
+              {items.map(({ product, quantity, flavor, flavorSrc }) => {
+                // Tier from the code aggregate; the label suffix disambiguates.
+                const codeQty = codeTotals.get(product.slug) ?? quantity;
+                const flavorLabel = flavor ? ` ${flavor}` : "";
+                return (
+                <li
+                  key={`${product.slug}-${flavor ?? "main"}`}
+                  className="flex gap-3"
+                >
+                  {/* Thumbnail (links to product page) — the chosen flavor's photo. */}
                   <Link
                     href={`/producto/${product.slug}`}
                     onClick={closeCart}
                     className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line/60"
                   >
                     <ProductImage
-                      src={product.imageSrc}
-                      alt={product.name}
+                      src={flavorSrc ?? product.imageSrc}
+                      alt={flavor ? `${product.name} ${flavor}` : product.name}
                       sizes="80px"
                     />
                   </Link>
@@ -138,8 +148,8 @@ export function CartDrawer() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => removeItem(product.slug)}
-                        aria-label={`Quitar ${product.name} del carrito`}
+                        onClick={() => removeItem(product.slug, flavor)}
+                        aria-label={`Quitar ${product.name}${flavorLabel} del carrito`}
                         className="shrink-0 rounded p-1 text-ink-soft transition-colors hover:text-pink-dark"
                       >
                         <CloseIcon width={16} height={16} />
@@ -152,13 +162,21 @@ export function CartDrawer() {
                       </p>
                     )}
 
+                    {/* Selected flavor — small secondary line; omitted when null. */}
+                    {flavor && (
+                      <p className="font-meta text-xs font-medium text-green-deep">
+                        · {flavor}
+                      </p>
+                    )}
+
                     {/* Unit-price row — ALWAYS rendered at a fixed height so
                         the line never resizes as the quantity/tier changes.
-                        Progressive strikethrough: base → tier2 → tier3. */}
+                        Progressive strikethrough: base → tier2 → tier3. Priced
+                        off the CODE aggregate quantity, not this line's qty. */}
                     {(() => {
                       const { active, struck } = activeAndStruckUnit(
                         product,
-                        quantity,
+                        codeQty,
                       );
                       if (active === null) return null; // unpriced product
                       return (
@@ -194,12 +212,13 @@ export function CartDrawer() {
                         max={product.stock === null ? 99 : product.stock}
                         size="sm"
                         onChange={(next) =>
-                          updateQuantity(product.slug, next)
+                          updateQuantity(product.slug, flavor, next)
                         }
-                        label={`Cantidad de ${product.name}`}
+                        label={`Cantidad de ${product.name}${flavorLabel}`}
                       />
                       {(() => {
-                        const unit = unitPriceForQty(product, quantity);
+                        // Unit = code-aggregate tier; line total = unit × line qty.
+                        const unit = unitPriceForQty(product, codeQty);
                         return unit === null ? null : (
                           <span className="text-sm font-medium text-ink">
                             {formatCOP(unit * quantity)}
@@ -209,7 +228,8 @@ export function CartDrawer() {
                     </div>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </div>
