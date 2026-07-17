@@ -19,9 +19,17 @@ import { cn } from "@/lib/cn";
 export function HeaderNav({
   onSearch,
   variant = "solid",
+  labelColor = "text-ink",
 }: {
   onSearch: () => void;
   variant?: "solid" | "overlay";
+  /**
+   * Base color class for the department trigger labels. Defaults to the normal
+   * dark ink; the home header passes a mode-tinted class at the top of the hero
+   * and swaps it to ink on scroll — the Trigger's `transition-colors` crossfades
+   * the change (single DOM, no remount).
+   */
+  labelColor?: string;
 }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -65,6 +73,7 @@ export function HeaderNav({
           open={openKey === confiteria.slug}
           onToggle={() => toggle(confiteria.slug)}
           onClose={close}
+          labelColor={labelColor}
         />
       )}
       {papeleria && (
@@ -73,6 +82,7 @@ export function HeaderNav({
           open={openKey === papeleria.slug}
           onToggle={() => toggle(papeleria.slug)}
           onClose={close}
+          labelColor={labelColor}
         />
       )}
       {/* On the overlay (home) header, Buscar lives in the right-side chip
@@ -116,12 +126,14 @@ function Trigger({
   panelId,
   onToggle,
   accent,
+  color,
 }: {
   label: string;
   open: boolean;
   panelId: string;
   onToggle: () => void;
   accent: string;
+  color: string;
 }) {
   return (
     <button
@@ -131,7 +143,8 @@ function Trigger({
       aria-controls={panelId}
       onClick={onToggle}
       className={cn(
-        "inline-flex items-center gap-1 py-2 text-sm text-ink transition-colors",
+        "inline-flex items-center gap-1 py-2 text-sm transition-colors",
+        color,
         accent,
       )}
     >
@@ -151,11 +164,13 @@ function ConfiteriaMenu({
   open,
   onToggle,
   onClose,
+  labelColor,
 }: {
   dept: NavNode;
   open: boolean;
   onToggle: () => void;
   onClose: () => void;
+  labelColor: string;
 }) {
   const panelId = useId();
   const categories = dept.children ?? [];
@@ -170,6 +185,7 @@ function ConfiteriaMenu({
         panelId={panelId}
         onToggle={onToggle}
         accent="hover:text-green-dark"
+        color={labelColor}
       />
 
       <div
@@ -230,11 +246,13 @@ function PapeleriaMenu({
   open,
   onToggle,
   onClose,
+  labelColor,
 }: {
   dept: NavNode;
   open: boolean;
   onToggle: () => void;
   onClose: () => void;
+  labelColor: string;
 }) {
   const panelId = useId();
 
@@ -246,6 +264,7 @@ function PapeleriaMenu({
         panelId={panelId}
         onToggle={onToggle}
         accent="hover:text-pink-dark"
+        color={labelColor}
       />
 
       <div

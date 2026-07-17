@@ -1,8 +1,8 @@
 import { FORCE_INTRO } from "@/components/home/introConfig";
 import { IntroCurtain } from "@/components/home/IntroCurtain";
 import { Hero } from "@/components/home/Hero";
-import { getFeaturedProducts } from "@/lib/catalog";
-import { ProductGrid } from "@/components/product/ProductGrid";
+import { Destacados } from "@/components/home/Destacados";
+import { getFeaturedByDepartment } from "@/lib/catalog";
 
 /**
  * Runs synchronously BEFORE first paint (plain inline <script>, not
@@ -29,32 +29,24 @@ const INTRO_SCRIPT_HTML = { __html: `<script>${INTRO_SCRIPT}</script>` };
 
 /**
  * Home page: intro curtain (once per session) + full-bleed hero with the
- * idling mascot, followed by the "Destacados" grid read through the catalog
- * data-access layer.
+ * idling mascot, followed by the mode-filtered "Destacados" showcase.
+ *
+ * BOTH department lists are precomputed here on the server and passed to the
+ * client <Destacados>, so toggling the shared hero mode (cookie/pencil) swaps
+ * the grid instantly with no refetch.
  */
 export default async function HomePage() {
-  const featured = await getFeaturedProducts();
+  const [confiteria, papeleria] = await Promise.all([
+    getFeaturedByDepartment("confiteria"),
+    getFeaturedByDepartment("papeleria"),
+  ]);
 
   return (
     <>
       <div hidden dangerouslySetInnerHTML={INTRO_SCRIPT_HTML} />
       <IntroCurtain />
       <Hero />
-
-      {/* Featured products — section hides itself cleanly when there are none. */}
-      {featured.length > 0 && (
-        <section
-          aria-label="Productos destacados"
-          className="w-full px-4 py-16 sm:px-6 lg:px-8"
-        >
-          <div className="mb-8 flex items-baseline justify-between gap-4">
-            <h2 className="font-display text-2xl text-ink sm:text-3xl">
-              Destacados
-            </h2>
-          </div>
-          <ProductGrid products={featured} />
-        </section>
-      )}
+      <Destacados confiteria={confiteria} papeleria={papeleria} />
     </>
   );
 }

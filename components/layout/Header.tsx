@@ -8,8 +8,8 @@ import { SearchPanel } from "@/components/search/SearchPanel";
 import { cn } from "@/lib/cn";
 
 /**
- * Default sticky header (every page EXCEPT the home page — home uses the
- * integrated overlay + scroll-handoff headers, see HomeHeaders.tsx).
+ * Default sticky header (every page EXCEPT the home page — home uses the single
+ * morphing fixed header, see HomeHeader.tsx).
  *
  *  - Announcement marquee in normal flow above the sticky header (scrolls away).
  *  - Sticky header row (HeaderRow) that hides on scroll down, reveals on scroll

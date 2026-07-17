@@ -3,11 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/layout/Header";
-import {
-  HomeMobileHeader,
-  HomeOverlayHeader,
-  HomeStickyHeader,
-} from "@/components/layout/HomeHeaders";
+import { HomeHeader } from "@/components/layout/HomeHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
@@ -100,20 +96,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <HeroModeProvider>
       {/* Header lives in the ROOT stacking context (above the search scrim).
-          Home swaps the default header for the integrated overlay row + the
-          scroll-handoff sticky header (see HomeHeaders.tsx). */}
-      {isHome ? (
-        <>
-          {/* Desktop: scroll-handoff sticky + integrated overlay (inside panel).
-              Mobile: one always-visible fixed header. Each is CSS-gated to its
-              breakpoint. */}
-          <HomeStickyHeader />
-          <HomeOverlayHeader />
-          <HomeMobileHeader />
-        </>
-      ) : (
-        <Header />
-      )}
+          Home uses a single fixed header that morphs from transparent-on-panel
+          to the white bar as you scroll (see HomeHeader.tsx). */}
+      {isHome ? <HomeHeader /> : <Header />}
 
       {/* Solid, higher-stacked content that scrolls up and over the footer. */}
       <div

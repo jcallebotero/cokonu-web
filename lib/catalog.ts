@@ -286,3 +286,27 @@ export async function getRelatedProducts(
   // Randomize the final display order (still server-computed → stable per gen).
   return shuffle(picked);
 }
+
+/** Default number of "Destacados" products shown per department. */
+const FEATURED_TARGET = 8;
+
+/**
+ * "Destacados" list for one department, for the mode-filtered home showcase.
+ * SERVER-side (SSG/ISR) like getRelatedProducts, so the random order is baked
+ * per generation (stable within a generation, rotates on revalidation, no
+ * hydration mismatch).
+ *
+ *  1. featured === true in the department, SELLABLE only (isSellable) — this is
+ *     what keeps AGOTADO / unpriced items out of the showcase.
+ *  2. FALLBACK: if the department has ZERO sellable featured products, use
+ *     RANDOM sellable products from the same department so it's never empty.
+ *  3. Up to `target`, shuffled.
+ */
+export async function getFeaturedByDepartment(
+  department: DepartmentSlug | string,
+  target = FEATURED_TARGET,
+): Promise<Product[]> {
+  const sellable = (await getProductsByDepartment(department)).filter(isSellable);
+  const featured = shuffle(sellable.filter((p) => p.featured)).slice(0, target);
+  return featured.length > 0 ? featured : shuffle(sellable).slice(0, target);
+}
