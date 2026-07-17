@@ -8,4 +8,4 @@
  * be previewed repeatedly. Flip to false to restore "once per browser session"
  * (key "cokonu:introSeen"). prefers-reduced-motion overrides this either way.
  */
-export const FORCE_INTRO = true;
+export const FORCE_INTRO = false;
