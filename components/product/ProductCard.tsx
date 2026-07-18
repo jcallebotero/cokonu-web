@@ -56,7 +56,14 @@ export function ProductCard({
         />
         {outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/55">
-            <span className="bg-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wide text-green-dark ring-1 ring-green-dark/20">
+            <span
+              className={cn(
+                "bg-bg-soft font-medium uppercase tracking-wide text-green-dark ring-1 ring-green-dark/20",
+                compactOnMobile
+                  ? "px-1 py-0 text-[8px]/[10px] sm:px-3 sm:py-1 sm:text-xs"
+                  : "px-3 py-1 text-xs",
+              )}
+            >
               Agotado
             </span>
           </div>
@@ -64,13 +71,21 @@ export function ProductCard({
       </div>
 
       {/* Text */}
-      <div className="mt-3 flex flex-1 flex-col">
+      <div
+        className={cn(
+          "flex flex-1 flex-col",
+          compactOnMobile ? "mt-1.5 sm:mt-3" : "mt-3",
+        )}
+      >
         <h3
           className={cn(
-            "text-sm text-ink",
-            // Mobile-only: clamp long names to 2 lines so cards don't grow
-            // unevenly and collide. No effect at sm+ (desktop unchanged).
-            compactOnMobile && "line-clamp-2 sm:line-clamp-none",
+            "text-ink",
+            // Mobile-only: shrink + clamp long names to 2 lines so cards don't
+            // grow unevenly and collide. The explicit /line-height keeps the
+            // 2-line box predictable. All reset at sm+ (desktop unchanged).
+            compactOnMobile
+              ? "line-clamp-2 text-[10px]/[13px] sm:line-clamp-none sm:text-sm"
+              : "text-sm",
           )}
         >
           {/* Stretched link: covers the whole card for navigation. */}
@@ -82,34 +97,64 @@ export function ProductCard({
           </Link>
         </h3>
         {product.presentation && (
-          <p className="mt-0.5 font-meta text-xs text-ink-soft">
+          <p
+            className={cn(
+              "mt-0.5 font-meta text-ink-soft",
+              compactOnMobile ? "text-[9px]/[11px] sm:text-xs" : "text-xs",
+            )}
+          >
             {product.presentation}
           </p>
         )}
 
         <div
           className={cn(
-            "flex items-end justify-between gap-2",
+            "flex items-end justify-between",
             // Mobile-only: push the price/Agregar row to the card bottom so all
-            // cards in a row align (align-items:stretch gives equal heights).
-            // mt-2 at sm+ keeps the desktop card exactly as it was.
-            compactOnMobile ? "mt-auto sm:mt-2" : "mt-2",
+            // cards in a row align (align-items:stretch gives equal heights),
+            // with a tighter gap at 4-up. mt-2/gap-2 at sm+ keeps the desktop
+            // card exactly as it was.
+            compactOnMobile ? "mt-auto gap-1 sm:mt-2 sm:gap-2" : "mt-2 gap-2",
           )}
         >
           {unitPrice !== null ? (
-            <span className="flex flex-col">
-              <span className="text-sm font-medium text-ink">
+            <span
+              className={cn(
+                "flex flex-col",
+                // Mobile-only: let the price column shrink below its intrinsic
+                // width so the tier hint wraps instead of pushing the button out.
+                compactOnMobile && "min-w-0 sm:min-w-[auto]",
+              )}
+            >
+              <span
+                className={cn(
+                  "font-medium text-ink",
+                  compactOnMobile ? "text-[10px]/[13px] sm:text-sm" : "text-sm",
+                )}
+              >
                 {formatCOP(unitPrice)}
               </span>
               {/* Subtle next-tier hint, e.g. "Desde 6: $34.000". */}
               {nextTier && (
-                <span className="font-meta text-xs text-green-dark">
+                <span
+                  className={cn(
+                    "font-meta text-green-dark",
+                    compactOnMobile ? "text-[9px]/[11px] sm:text-xs" : "text-xs",
+                  )}
+                >
                   Desde {nextTier.minQty}: {formatCOP(nextTier.price)}
                 </span>
               )}
             </span>
           ) : (
-            <span className="font-meta text-xs text-ink-soft">
+            <span
+              className={cn(
+                "font-meta text-ink-soft",
+                compactOnMobile
+                  ? "min-w-0 text-[9px]/[11px] sm:min-w-[auto] sm:text-xs"
+                  : "text-xs",
+              )}
+            >
               Consultar por WhatsApp
             </span>
           )}
@@ -125,7 +170,13 @@ export function ProductCard({
                 : `Agregar ${product.name} al carrito`
             }
             className={cn(
-              "relative z-10 px-3 py-1.5 text-xs font-medium transition-all duration-200",
+              "relative z-10 font-medium transition-all duration-200",
+              // Mobile-only: a genuinely small button (real sizes, no zoom) that
+              // never wraps or shrinks, so the label stays legible and the price
+              // beside it wraps instead. Desktop values restored at sm+.
+              compactOnMobile
+                ? "shrink-0 whitespace-nowrap px-1 py-0.5 text-[8px]/[10px] sm:shrink sm:whitespace-normal sm:px-3 sm:py-1.5 sm:text-xs"
+                : "px-3 py-1.5 text-xs",
               outOfStock
                 ? "cursor-not-allowed bg-bg-soft text-green-dark"
                 : "bg-green text-green-deep hover:scale-[1.04] hover:bg-pink hover:text-pink-tint",

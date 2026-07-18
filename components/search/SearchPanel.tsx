@@ -173,17 +173,19 @@ export function SearchPanel({
                   </div>
 
                   {/* Vertical product cards — the SAME ProductCard as the
-                      category grid (photo on top, name/price below).
-                      DESKTOP (sm+): 4 across at natural size, unchanged.
-                      MOBILE (<sm): 2 across at natural size. The old layout put
-                      4 across via a `zoom:0.6` + `100vw` inverse-width hack,
-                      which renders fine in Chrome but mis-computes on iOS WebKit
-                      (real iPhones) — cards overlapped and Agregar buttons/prices
-                      collided. 2-up gives each card room to breathe; combined
-                      with `compactOnMobile` (name clamped to 2 lines + button
-                      bottom-anchored) and the grid's align-items:stretch, cards
-                      in a row share height and their buttons line up. */}
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      category grid (photo on top, name/price below). FOUR across
+                      at every width, desktop unchanged.
+                      The previous mobile layout also showed 4 across, but faked
+                      the small size with `zoom:0.6` on a `w-[calc((100vw-2rem)/0.6)]`
+                      element. Chrome renders that cleanly; iOS WebKit mis-computes
+                      it, so on real iPhones cards overlapped and the Agregar
+                      buttons/prices collided. Here the grid is the REAL viewport
+                      width and the small size is honest CSS: `compactOnMobile`
+                      shrinks the card's type/padding/button below sm (all reset at
+                      sm+), clamps the name to 2 lines and bottom-anchors the
+                      price/Agregar row so — with the grid's align-items:stretch —
+                      cards in the row share height and their buttons line up. */}
+                  <div className="grid grid-cols-4 gap-2 sm:gap-4">
                     {results.items.map((p) => (
                       <ProductCard key={p.slug} product={p} compactOnMobile />
                     ))}
