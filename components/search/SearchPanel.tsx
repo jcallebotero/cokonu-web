@@ -173,18 +173,20 @@ export function SearchPanel({
                   </div>
 
                   {/* Vertical product cards — the SAME ProductCard as the
-                      category grid (photo on top, name/price below). Always 4
-                      across (desktop AND mobile). On mobile the whole grid is
-                      zoomed down (with an inverse width so it still fills the
-                      row) so the four full cards fit without horizontal
-                      overflow; `zoom` scales layout, so there's no leftover
-                      space. Desktop renders at natural size. */}
-                  <div className="w-[calc((100vw-2rem)/0.6)] [zoom:0.6] sm:w-full sm:[zoom:1]">
-                    <div className="grid grid-cols-4 gap-4">
-                      {results.items.map((p) => (
-                        <ProductCard key={p.slug} product={p} />
-                      ))}
-                    </div>
+                      category grid (photo on top, name/price below).
+                      DESKTOP (sm+): 4 across at natural size, unchanged.
+                      MOBILE (<sm): 2 across at natural size. The old layout put
+                      4 across via a `zoom:0.6` + `100vw` inverse-width hack,
+                      which renders fine in Chrome but mis-computes on iOS WebKit
+                      (real iPhones) — cards overlapped and Agregar buttons/prices
+                      collided. 2-up gives each card room to breathe; combined
+                      with `compactOnMobile` (name clamped to 2 lines + button
+                      bottom-anchored) and the grid's align-items:stretch, cards
+                      in a row share height and their buttons line up. */}
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    {results.items.map((p) => (
+                      <ProductCard key={p.slug} product={p} compactOnMobile />
+                    ))}
                   </div>
                 </>
               ) : results && results.items.length === 0 ? (

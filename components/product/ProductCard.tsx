@@ -19,13 +19,20 @@ import type { Product } from "@/types/product";
  * - `flavorLabels` (optional): subtle, non-clickable indicator chips for the
  *   product's photo-derived flavor variants. Only the category page passes them;
  *   an empty/absent list renders no chips (unchanged card).
+ * - `compactOnMobile` (optional): MOBILE-ONLY hardening for tight layouts (the
+ *   search dropdown, 2-across on a phone). It clamps the name to 2 lines and
+ *   anchors the price/Agregar row to the bottom so cards in a row line up. It is
+ *   inert at `sm` and up, and off by default, so DESKTOP and every other call
+ *   site are byte-identical.
  */
 export function ProductCard({
   product,
   flavorLabels,
+  compactOnMobile = false,
 }: {
   product: Product;
   flavorLabels?: string[];
+  compactOnMobile?: boolean;
 }) {
   const { addItem } = useCart();
   // Up to 4 flavor chips in a single row; a "+N" chip stands in for the rest.
@@ -58,7 +65,14 @@ export function ProductCard({
 
       {/* Text */}
       <div className="mt-3 flex flex-1 flex-col">
-        <h3 className="text-sm text-ink">
+        <h3
+          className={cn(
+            "text-sm text-ink",
+            // Mobile-only: clamp long names to 2 lines so cards don't grow
+            // unevenly and collide. No effect at sm+ (desktop unchanged).
+            compactOnMobile && "line-clamp-2 sm:line-clamp-none",
+          )}
+        >
           {/* Stretched link: covers the whole card for navigation. */}
           <Link
             href={`/producto/${product.slug}`}
@@ -73,7 +87,15 @@ export function ProductCard({
           </p>
         )}
 
-        <div className="mt-2 flex items-end justify-between gap-2">
+        <div
+          className={cn(
+            "flex items-end justify-between gap-2",
+            // Mobile-only: push the price/Agregar row to the card bottom so all
+            // cards in a row align (align-items:stretch gives equal heights).
+            // mt-2 at sm+ keeps the desktop card exactly as it was.
+            compactOnMobile ? "mt-auto sm:mt-2" : "mt-2",
+          )}
+        >
           {unitPrice !== null ? (
             <span className="flex flex-col">
               <span className="text-sm font-medium text-ink">
