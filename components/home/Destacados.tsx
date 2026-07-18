@@ -126,7 +126,7 @@ export function Destacados({
             className="font-medium lowercase text-ink"
             style={{ fontSize: "clamp(18px, 2.2vw, 34px)" }}
           >
-            explora y enamorate
+            explora y enamórate
           </span>
           <span
             className="font-medium lowercase text-ink"
