@@ -48,7 +48,7 @@ export default async function CategoryPage({
   // one readdir per card. Only products WITH flavors get an entry → chips.
   const flavorLabelsBySlug: Record<string, string[]> = {};
   for (const p of products) {
-    const labels = getFlavorLabels(p.department, p.code);
+    const labels = await getFlavorLabels(p.department, p.code);
     if (labels.length > 0) flavorLabelsBySlug[p.slug] = labels;
   }
 

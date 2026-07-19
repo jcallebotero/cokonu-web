@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { CloudinaryCatalog } from "@/lib/cloudinaryCatalog";
 
 /**
  * Deploy-scoped cache-buster, BAKED AT BUILD TIME. `process.env.DEPLOY_VERSION`
@@ -41,6 +42,38 @@ const VERSION = process.env.DEPLOY_VERSION || "dev";
  */
 export function productImageSrc(department: string, code: string): string {
   return productFileSrc(department, `${code}.jpg`);
+}
+
+/**
+ * PER-CÓDIGO SOURCE SWITCH — the one rule that decides repo vs Cloudinary.
+ *
+ * If Cloudinary holds ANY asset for `<department>/<code>` it is AUTHORITATIVE
+ * for that código: we serve its original delivery URL and never fall back to the
+ * repo for that código (sources are never mixed within one código). If it holds
+ * only flavors and no `<codigo>` main, the first flavor stands in as the main
+ * image rather than crossing back to `public/`.
+ *
+ * If Cloudinary holds NOTHING for the código, this returns the EXISTING repo
+ * path completely unchanged — same `?v=<DEPLOY_VERSION>` cache-buster, same
+ * on-disk existence check, same placeholder behaviour. An empty catalog (no
+ * credentials, e.g. every local build) therefore means "repo, exactly as today".
+ *
+ * Deliberately SYNCHRONOUS: the caller fetches the catalog once in the server
+ * data layer and passes it in, so no leaf helper becomes async and no Cloudinary
+ * access can drift into a Client Component. Cloudinary URLs get NO `?v=` — the
+ * `/v<version>/` segment already busts cache on re-upload.
+ */
+export function resolveProductImageSrc(
+  catalog: CloudinaryCatalog,
+  department: string,
+  code: string,
+): string {
+  const entry = catalog.get(`${department}/${code}`);
+  if (entry) {
+    const main = entry.main ?? entry.flavors[0]?.url;
+    if (main) return main;
+  }
+  return productImageSrc(department, code);
 }
 
 /**

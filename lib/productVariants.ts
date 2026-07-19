@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 import { productFileSrc } from "@/lib/productImage";
+import { getCloudinaryCatalog } from "@/lib/cloudinaryCatalog";
 
 /**
  * FLAVOR VARIANTS discovered from image FILES — never from catalog rows.
@@ -81,7 +82,27 @@ function labelFromFlavor(flavor: string): string {
  * for any extension. No photos → [] (→ placeholder, no strip, no chips).
  */
 export const getProductVariants = cache(
-  (department: string, code: string): ProductVariant[] => {
+  async (department: string, code: string): Promise<ProductVariant[]> => {
+    // SOURCE SWITCH: if Cloudinary holds anything for this código it is
+    // AUTHORITATIVE — its main + flavors are used and we never cross back to
+    // the repo for this código (sources are never mixed). A requested sabor that
+    // isn't in Cloudinary simply isn't in this list, so the caller falls back to
+    // the código's main Cloudinary image. Empty catalog (no credentials / any
+    // failure) → this is skipped entirely and the repo logic below runs as today.
+    const catalog = await getCloudinaryCatalog();
+    const entry = catalog.get(`${department}/${code}`);
+    if (entry) {
+      // Already sorted alphabetically by name in lib/cloudinaryCatalog.ts.
+      const flavors: ProductVariant[] = entry.flavors.map((f) => ({
+        flavor: f.slug,
+        label: f.name,
+        src: f.url,
+      }));
+      return entry.main
+        ? [{ flavor: null, label: null, src: entry.main }, ...flavors]
+        : flavors;
+    }
+
     const files = readDepartmentDir(department);
     const re = new RegExp(`^${escapeRegExp(code)}(?:-(.+))?$`);
 
@@ -113,8 +134,11 @@ export const getProductVariants = cache(
  * Flavor labels only (main excluded), alphabetical — for the category-card
  * chips. Reuses the memoized discovery above.
  */
-export function getFlavorLabels(department: string, code: string): string[] {
-  return getProductVariants(department, code)
+export async function getFlavorLabels(
+  department: string,
+  code: string,
+): Promise<string[]> {
+  return (await getProductVariants(department, code))
     .filter((v) => v.flavor !== null)
     .map((v) => v.label as string);
 }
