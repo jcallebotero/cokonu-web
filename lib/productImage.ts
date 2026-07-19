@@ -44,36 +44,64 @@ export function productImageSrc(department: string, code: string): string {
   return productFileSrc(department, `${code}.jpg`);
 }
 
+/** Does `public/products/<department>/<filename>` exist? Never throws. */
+function repoFileExists(department: string, filename: string): boolean {
+  try {
+    fs.statSync(
+      path.join(process.cwd(), "public", "products", department, filename),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * PER-CÓDIGO SOURCE SWITCH — the one rule that decides repo vs Cloudinary.
+ * THE MAIN-IMAGE RULE — the SINGLE source of truth, shared by the product grid
+ * (via lib/catalog.ts `getSource`) and the product detail page (via
+ * lib/productVariants.ts `getProductVariants`). Both consumers call into this so
+ * one código can never resolve differently in two places.
  *
- * If Cloudinary holds ANY asset for `<department>/<code>` it is AUTHORITATIVE
- * for that código: we serve its original delivery URL and never fall back to the
- * repo for that código (sources are never mixed within one código). If it holds
- * only flavors and no `<codigo>` main, the first flavor stands in as the main
- * image rather than crossing back to `public/`.
- *
- * If Cloudinary holds NOTHING for the código, this returns the EXISTING repo
- * path completely unchanged — same `?v=<DEPLOY_VERSION>` cache-buster, same
- * on-disk existence check, same placeholder behaviour. An empty catalog (no
- * credentials, e.g. every local build) therefore means "repo, exactly as today".
+ * Priority:
+ *   1. The Cloudinary `<codigo>` asset (`entry.main`) when present.
+ *   2. Otherwise the repo `<codigo>.jpg` (with its `?v=<DEPLOY_VERSION>`), even
+ *      if Cloudinary holds FLAVORS for this código — a flavor image must NEVER
+ *      stand in as the main image. This is the one deliberate, narrow crossing
+ *      back to the repo; flavors remain additive on top (see getProductVariants).
+ *   3. `null` when neither exists → the caller shows the coco placeholder.
  *
  * Deliberately SYNCHRONOUS: the caller fetches the catalog once in the server
  * data layer and passes it in, so no leaf helper becomes async and no Cloudinary
  * access can drift into a Client Component. Cloudinary URLs get NO `?v=` — the
  * `/v<version>/` segment already busts cache on re-upload.
  */
+export function resolveProductMainImage(
+  catalog: CloudinaryCatalog,
+  department: string,
+  code: string,
+): string | null {
+  const entry = catalog.get(`${department}/${code}`);
+  if (entry?.main) return entry.main;
+  return repoFileExists(department, `${code}.jpg`)
+    ? productImageSrc(department, code)
+    : null;
+}
+
+/**
+ * Same rule as `resolveProductMainImage`, but always a string: when nothing
+ * exists it returns the plain (unversioned) repo path, whose 404 drives
+ * <ProductImage>'s onError → coco placeholder. This is what the catalog bakes
+ * into `product.imageSrc`, so the grid/card path is byte-for-byte unchanged.
+ */
 export function resolveProductImageSrc(
   catalog: CloudinaryCatalog,
   department: string,
   code: string,
 ): string {
-  const entry = catalog.get(`${department}/${code}`);
-  if (entry) {
-    const main = entry.main ?? entry.flavors[0]?.url;
-    if (main) return main;
-  }
-  return productImageSrc(department, code);
+  return (
+    resolveProductMainImage(catalog, department, code) ??
+    productImageSrc(department, code)
+  );
 }
 
 /**

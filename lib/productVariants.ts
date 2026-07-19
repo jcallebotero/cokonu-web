@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import { productFileSrc } from "@/lib/productImage";
+import {
+  productFileSrc,
+  productImageSrc,
+  resolveProductMainImage,
+} from "@/lib/productImage";
 import { getCloudinaryCatalog } from "@/lib/cloudinaryCatalog";
 
 /**
@@ -83,12 +87,14 @@ function labelFromFlavor(flavor: string): string {
  */
 export const getProductVariants = cache(
   async (department: string, code: string): Promise<ProductVariant[]> => {
-    // SOURCE SWITCH: if Cloudinary holds anything for this código it is
-    // AUTHORITATIVE — its main + flavors are used and we never cross back to
-    // the repo for this código (sources are never mixed). A requested sabor that
-    // isn't in Cloudinary simply isn't in this list, so the caller falls back to
-    // the código's main Cloudinary image. Empty catalog (no credentials / any
-    // failure) → this is skipped entirely and the repo logic below runs as today.
+    // SOURCE SWITCH. When Cloudinary holds anything for this código, its flavors
+    // are authoritative for the variant chips. The MAIN image, however, goes
+    // through the SHARED rule (lib/productImage.ts `resolveProductMainImage`) —
+    // the exact function the grid uses — so a código resolves identically here
+    // and on its card: Cloudinary `<codigo>` → repo `<codigo>.jpg` → placeholder.
+    // A flavor is never promoted to main, but flavors stay ADDITIVE on top of a
+    // repo main. Empty catalog (no credentials / any failure) → skipped entirely
+    // and the repo discovery below runs exactly as before.
     const catalog = await getCloudinaryCatalog();
     const entry = catalog.get(`${department}/${code}`);
     if (entry) {
@@ -98,9 +104,18 @@ export const getProductVariants = cache(
         label: f.name,
         src: f.url,
       }));
-      return entry.main
-        ? [{ flavor: null, label: null, src: entry.main }, ...flavors]
-        : flavors;
+      const mainSrc = resolveProductMainImage(catalog, department, code);
+      if (mainSrc) {
+        return [{ flavor: null, label: null, src: mainSrc }, ...flavors];
+      }
+      if (flavors.length === 0) return [];
+      // Cloudinary holds ONLY flavors and there's no repo main either. Hold slot
+      // 0 with the (missing) repo path so its 404 → coco placeholder: a flavor
+      // must never slide into the large-image slot just because it sorts first.
+      return [
+        { flavor: null, label: null, src: productImageSrc(department, code) },
+        ...flavors,
+      ];
     }
 
     const files = readDepartmentDir(department);
