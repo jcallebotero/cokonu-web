@@ -50,11 +50,6 @@ const nextConfig: NextConfig = {
       { pathname: "/brand/**", search: "" },
       { pathname: "/products/**" },
     ],
-    // Cloudinary is only the ORIGIN store for product photos that have been
-    // uploaded there; next/image (via Netlify) still does all the optimizing,
-    // so the URLs we generate carry NO Cloudinary transformation segment.
-    // Without this entry next/image throws "hostname not configured" at runtime.
-    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
 };
 

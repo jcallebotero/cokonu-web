@@ -47,7 +47,7 @@ export default async function ProductPage({
 
   // Flavor variants are discovered from the photo files (main + any
   // <code>-<flavor>.<ext>), server-side, and passed to the client gallery.
-  const variants = await getProductVariants(product.department, product.code);
+  const variants = getProductVariants(product.department, product.code);
 
   // Related showcase — computed SERVER-side (order baked per ISR generation).
   // Same-category first, topped up from the department; sellable items only.
@@ -55,7 +55,7 @@ export default async function ProductPage({
   // Variant chips for the related cards (same source the category grid uses).
   const relatedFlavorLabels: Record<string, string[]> = {};
   for (const p of related) {
-    const labels = await getFlavorLabels(p.department, p.code);
+    const labels = getFlavorLabels(p.department, p.code);
     if (labels.length > 0) relatedFlavorLabels[p.slug] = labels;
   }
 

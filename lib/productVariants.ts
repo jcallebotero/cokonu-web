@@ -1,12 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import {
-  productFileSrc,
-  productImageSrc,
-  resolveProductMainImage,
-} from "@/lib/productImage";
-import { getCloudinaryCatalog } from "@/lib/cloudinaryCatalog";
+import { productFileSrc } from "@/lib/productImage";
 
 /**
  * FLAVOR VARIANTS discovered from image FILES — never from catalog rows.
@@ -86,38 +81,7 @@ function labelFromFlavor(flavor: string): string {
  * for any extension. No photos → [] (→ placeholder, no strip, no chips).
  */
 export const getProductVariants = cache(
-  async (department: string, code: string): Promise<ProductVariant[]> => {
-    // SOURCE SWITCH. When Cloudinary holds anything for this código, its flavors
-    // are authoritative for the variant chips. The MAIN image, however, goes
-    // through the SHARED rule (lib/productImage.ts `resolveProductMainImage`) —
-    // the exact function the grid uses — so a código resolves identically here
-    // and on its card: Cloudinary `<codigo>` → repo `<codigo>.jpg` → placeholder.
-    // A flavor is never promoted to main, but flavors stay ADDITIVE on top of a
-    // repo main. Empty catalog (no credentials / any failure) → skipped entirely
-    // and the repo discovery below runs exactly as before.
-    const catalog = await getCloudinaryCatalog();
-    const entry = catalog.get(`${department}/${code}`);
-    if (entry) {
-      // Already sorted alphabetically by name in lib/cloudinaryCatalog.ts.
-      const flavors: ProductVariant[] = entry.flavors.map((f) => ({
-        flavor: f.slug,
-        label: f.name,
-        src: f.url,
-      }));
-      const mainSrc = resolveProductMainImage(catalog, department, code);
-      if (mainSrc) {
-        return [{ flavor: null, label: null, src: mainSrc }, ...flavors];
-      }
-      if (flavors.length === 0) return [];
-      // Cloudinary holds ONLY flavors and there's no repo main either. Hold slot
-      // 0 with the (missing) repo path so its 404 → coco placeholder: a flavor
-      // must never slide into the large-image slot just because it sorts first.
-      return [
-        { flavor: null, label: null, src: productImageSrc(department, code) },
-        ...flavors,
-      ];
-    }
-
+  (department: string, code: string): ProductVariant[] => {
     const files = readDepartmentDir(department);
     const re = new RegExp(`^${escapeRegExp(code)}(?:-(.+))?$`);
 
@@ -149,11 +113,8 @@ export const getProductVariants = cache(
  * Flavor labels only (main excluded), alphabetical — for the category-card
  * chips. Reuses the memoized discovery above.
  */
-export async function getFlavorLabels(
-  department: string,
-  code: string,
-): Promise<string[]> {
-  return (await getProductVariants(department, code))
+export function getFlavorLabels(department: string, code: string): string[] {
+  return getProductVariants(department, code)
     .filter((v) => v.flavor !== null)
     .map((v) => v.label as string);
 }

@@ -1,8 +1,7 @@
 import type { DepartmentSlug, Product } from "@/types/product";
 import codeReference from "@/data/chocolatinas.json";
 import { searchProducts } from "@/lib/search";
-import { resolveProductImageSrc } from "@/lib/productImage";
-import { getCloudinaryCatalog } from "@/lib/cloudinaryCatalog";
+import { productImageSrc } from "@/lib/productImage";
 import { basePrice } from "@/lib/pricing";
 
 /**
@@ -104,12 +103,6 @@ async function getSource(): Promise<Product[]> {
       return [];
     }
 
-    // What currently lives in Cloudinary, listed ONCE per request (deduped by
-    // React cache + a TTL). Empty when Cloudinary isn't configured or is
-    // unreachable — in which case every código resolves to its repo photo,
-    // exactly as before. Never throws.
-    const cloudinary = await getCloudinaryCatalog();
-
     const usedSlugs = new Set<string>();
     const seenIdentities = new Set<string>();
     const products: Product[] = [];
@@ -160,11 +153,10 @@ async function getSource(): Promise<Product[]> {
         stock: num(raw.stock),
         description: null,
         featured: raw.featured === true,
-        // Resolve the image URL here, server-side, so it rides on the product
-        // through the whole app (grid, product page, search, cart) and the
-        // client never needs `fs` — or Cloudinary credentials. Cloudinary wins
-        // per código when it has one; otherwise the repo path, unchanged.
-        imageSrc: resolveProductImageSrc(cloudinary, department, code),
+        // Resolve the (cache-busted) image URL here, server-side, so it rides on
+        // the product through the whole app (grid, product page, search, cart)
+        // and the client never needs `fs`. Missing photos → plain path.
+        imageSrc: productImageSrc(department, code),
       });
     }
 
