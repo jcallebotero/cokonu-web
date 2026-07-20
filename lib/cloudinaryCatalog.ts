@@ -19,26 +19,35 @@ import { cache } from "react";
  * the build fail loudly if it is ever pulled into a Client Component. Consumers
  * must resolve URLs on the server and pass finished plain strings to the client.
  *
- * FOLDER MODES: every account created since June 2024 uses DYNAMIC folders,
- * where an asset's folder is not part of its public_id (which may be a random
- * token) and its human-readable name lives in `display_name`. So we list each
- * known folder with `resources/by_asset_folder` and read the código from
- * `display_name`, falling back to the classic whole-account listing (matching on
- * `asset_folder`/`folder`/public_id path) only if that endpoint is rejected.
+ * FOLDER MODES: this account is DYNAMIC folder mode, where an asset's folder is
+ * not part of its public_id (which may be a random token) and its human-readable
+ * name lives in `display_name`. So we list each known folder directly with
+ * `resources/by_asset_folder` and read the código from `display_name`. A `404`
+ * for a folder just means that department has no assets yet (contributes zero;
+ * NOT an error). There is no whole-account fallback: the account is confirmed
+ * dynamic, and a full `/resources/image` scan only burned Admin API quota.
  *
- * FAILURE IS ALWAYS SOFT. Missing env vars, a network error, an auth failure or
- * an unexpected payload all resolve to an EMPTY map after ONE concise warning —
- * never a throw. An empty map simply means "nothing is in Cloudinary", so every
- * código falls back to the existing repo logic and the site is unaffected. This
- * is also the normal local path: credentials live only in Netlify, so a local
- * `npm run build` legitimately produces an empty catalog.
+ * RATE LIMIT + GLOBAL DEDUP: the Admin API is capped at 500 requests/HOUR on the
+ * Free plan, and there are hundreds of ISR pages each revalidating every 600s. So
+ * every Admin GET goes through Next's shared Data Cache (`next.revalidate: 600`),
+ * which dedupes it across ALL pages / requests / serverless instances — one real
+ * call per folder per ~10 min for the whole site, not one per page. `cache()`
+ * adds per-render dedup on top.
+ *
+ * FAILURE IS ALWAYS SOFT, and NEVER BLANKS A POPULATED SITE. Missing env vars →
+ * empty map (the local path: credentials live only in Netlify). Any real failure
+ * — a non-2xx (429 rate-limit, 5xx…), a network error, an unexpected payload —
+ * logs ONE concise warning and returns the LAST-GOOD catalog if we ever built
+ * one, else an empty map. It never throws. So a transient hiccup keeps the last
+ * known photos showing; only an instance that has never succeeded falls back to
+ * repo images, and it self-heals on the next window.
  */
 
 /** Departments whose Cloudinary folder we honour. Anything else is ignored. */
 const ALLOWED_FOLDERS = new Set(["cokonu/confiteria", "cokonu/papeleria"]);
 
-/** Warm-instance cache window. Matches the catalog's ISR `revalidate: 600`. */
-const TTL_MS = 10 * 60 * 1000;
+/** Shared Data Cache window for every Admin API GET. Matches ISR `revalidate`. */
+const REVALIDATE_SECONDS = 600;
 
 /** Hard stop on pagination so a surprise can never spin forever. */
 const MAX_PAGES = 20;
@@ -68,8 +77,12 @@ export type CloudinaryCatalog = ReadonlyMap<string, CloudinaryEntry>;
 
 const EMPTY: CloudinaryCatalog = new Map();
 
-/** Module-level TTL cache so warm instances don't re-list on every render. */
-let memo: { at: number; map: CloudinaryCatalog } | null = null;
+/**
+ * The last successfully-built, NON-EMPTY catalog. Returned on any subsequent
+ * failure so a transient Cloudinary/Admin-API problem never blanks the site's
+ * images. Only ever assigned from a fetch that succeeded and yielded assets.
+ */
+let lastGoodCatalog: CloudinaryCatalog | null = null;
 
 /**
  * Title-case a flavor slug: remaining dashes/underscores become spaces and each
@@ -92,16 +105,28 @@ function readString(record: Record<string, unknown>, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-/** One Admin API GET. Returns the status and parsed body; never throws on 4xx/5xx. */
+/**
+ * One Admin API GET, through Next's SHARED Data Cache (`next.revalidate`), so the
+ * same URL is fetched at most once per window across every page/request/instance
+ * — the rate-limit fix. In Next 16 `fetch` is uncached by default, so the
+ * explicit `next.revalidate` is what opts in. (The debug route is force-dynamic
+ * and intentionally bypasses this to read live.)
+ *
+ * Returns the status and, ONLY for a 2xx, the parsed body. A non-2xx body is
+ * never parsed into a catalog: `ok` gates that at the call sites, so a 429/5xx
+ * error payload can never become the window's data. Never throws on 4xx/5xx (a
+ * network error still rejects → handled as a failure up the chain).
+ */
 async function adminGet(
   url: URL,
   auth: string,
-): Promise<{ status: number; body: Record<string, unknown> }> {
+): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url, {
     headers: { Authorization: `Basic ${auth}` },
-    // Admin API listing is metadata, not page data: never let Next cache it.
-    cache: "no-store",
+    next: { revalidate: REVALIDATE_SECONDS },
   });
+  if (!res.ok) return { ok: false, status: res.status, body: {} };
+
   let body: Record<string, unknown> = {};
   try {
     const payload: unknown = await res.json();
@@ -109,9 +134,9 @@ async function adminGet(
       body = payload as Record<string, unknown>;
     }
   } catch {
-    // Non-JSON body (e.g. an HTML error page) → treat as empty.
+    // 2xx with a non-JSON body (shouldn't happen) → treat as empty resources.
   }
-  return { status: res.status, body };
+  return { ok: true, status: res.status, body };
 }
 
 /** Pull `resources` out of a listing body, defensively. */
@@ -123,27 +148,22 @@ function resourcesOf(body: Record<string, unknown>): Record<string, unknown>[] {
 }
 
 /**
- * PRIMARY listing — DYNAMIC FOLDER MODE.
+ * List one folder's assets directly (dynamic folder mode). `by_asset_folder`
+ * asks Cloudinary for the assets in a folder regardless of public_id shape.
  *
- * Every Cloudinary account created since June 2024 is in dynamic folder mode,
- * where the asset's folder is NOT part of its public_id (which may be a random
- * token) and the generic `/resources/image` listing doesn't carry a usable
- * folder field. Filtering by a folder derived from the public_id therefore drops
- * EVERY asset and the catalog silently comes back empty — which is exactly the
- * bug this replaces. `by_asset_folder` asks Cloudinary directly for the assets
- * in a folder, so it works no matter what the public_ids look like.
- *
- * Returns `ok: false` (with the status) if the endpoint rejects the request, so
- * the caller can fall back to the fixed-folder-mode strategy.
+ *  - 2xx → the folder's resources (paginated via `next_cursor`).
+ *  - 404 → the folder doesn't exist yet → ZERO assets, NOT an error (e.g.
+ *    `cokonu/papeleria` before any papelería photo is uploaded).
+ *  - any other non-2xx (429, 5xx, …) → a REAL failure → THROW, so the caller
+ *    returns the last-good catalog rather than an empty one.
  */
 async function listByAssetFolder(
   cloudName: string,
   auth: string,
   folder: string,
-): Promise<{ ok: boolean; status: number; resources: Record<string, unknown>[] }> {
+): Promise<Record<string, unknown>[]> {
   const collected: Record<string, unknown>[] = [];
   let cursor = "";
-  let status = 0;
 
   for (let page = 0; page < MAX_PAGES; page++) {
     const endpoint = new URL(
@@ -153,46 +173,10 @@ async function listByAssetFolder(
     endpoint.searchParams.set("max_results", String(PAGE_SIZE));
     if (cursor) endpoint.searchParams.set("next_cursor", cursor);
 
-    const { status: httpStatus, body } = await adminGet(endpoint, auth);
-    status = httpStatus;
-    if (httpStatus < 200 || httpStatus >= 300) {
-      return { ok: false, status: httpStatus, resources: [] };
-    }
-
-    collected.push(...resourcesOf(body));
-    cursor = readString(body, "next_cursor");
-    if (!cursor) break;
-  }
-
-  return { ok: true, status, resources: collected };
-}
-
-/**
- * FALLBACK listing — FIXED (classic) FOLDER MODE.
- *
- * Only used when `by_asset_folder` is rejected for a folder. Lists every upload
- * once and keeps the assets whose folder matches, deriving the folder from
- * `asset_folder` → `folder` → the public_id's leading path, which is how classic
- * accounts expose it.
- */
-async function listAllUploads(
-  cloudName: string,
-  auth: string,
-): Promise<Record<string, unknown>[]> {
-  const collected: Record<string, unknown>[] = [];
-  let cursor = "";
-
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const endpoint = new URL(
-      `https://api.cloudinary.com/v1_1/${cloudName}/resources/image`,
-    );
-    endpoint.searchParams.set("type", "upload");
-    endpoint.searchParams.set("max_results", String(PAGE_SIZE));
-    if (cursor) endpoint.searchParams.set("next_cursor", cursor);
-
-    const { status, body } = await adminGet(endpoint, auth);
-    if (status < 200 || status >= 300) {
-      throw new Error(`Admin API HTTP ${status}`);
+    const { ok, status, body } = await adminGet(endpoint, auth);
+    if (!ok) {
+      if (status === 404) return []; // folder not created yet → zero assets
+      throw new Error(`by_asset_folder HTTP ${status} for "${folder}"`);
     }
 
     collected.push(...resourcesOf(body));
@@ -201,18 +185,6 @@ async function listAllUploads(
   }
 
   return collected;
-}
-
-/** The folder a resource belongs to, as reported by a classic-mode listing. */
-function folderOf(resource: Record<string, unknown>): string {
-  const publicId = readString(resource, "public_id");
-  const cut = publicId.lastIndexOf("/");
-  const implied = cut >= 0 ? publicId.slice(0, cut) : "";
-  return (
-    readString(resource, "asset_folder") ||
-    readString(resource, "folder") ||
-    implied
-  );
 }
 
 /**
@@ -272,41 +244,27 @@ function addResource(
 }
 
 /**
- * Build the catalog: ask each known folder for its assets (dynamic-folder mode),
- * falling back per-folder to the classic whole-account listing if that endpoint
- * is rejected.
+ * Build the catalog by asking each known folder directly for its assets. Throws
+ * on a real Admin API failure (so the caller can fall back to last-good); a
+ * missing (404) folder just contributes nothing.
  */
 async function listCloudinary(): Promise<CloudinaryCatalog> {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-  // Expected locally (credentials live only in Netlify) → silent empty catalog.
+  // Expected locally (credentials live only in Netlify) → silent empty catalog,
+  // not a failure: don't warn and don't disturb last-good.
   if (!cloudName || !apiKey || !apiSecret) return EMPTY;
 
   const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
   const map = new Map<string, CloudinaryEntry>();
-  // Classic-mode listing is global, so fetch it at most once across both folders.
-  let allUploads: Record<string, unknown>[] | null = null;
 
   for (const folder of ALLOWED_FOLDERS) {
     const departamento = folder.slice(folder.lastIndexOf("/") + 1);
-    const primary = await listByAssetFolder(cloudName, auth, folder);
-
-    if (primary.ok) {
-      for (const resource of primary.resources) {
-        addResource(map, cloudName, departamento, resource);
-      }
-      continue;
-    }
-
-    // by_asset_folder rejected → this account is likely in fixed folder mode.
-    console.warn(
-      `[cloudinary] by_asset_folder HTTP ${primary.status} for "${folder}" — falling back to the full listing.`,
-    );
-    allUploads ??= await listAllUploads(cloudName, auth);
-    for (const resource of allUploads) {
-      if (folderOf(resource) !== folder) continue;
+    // Throws on a real failure (429/5xx/network); returns [] on a 404 folder.
+    const resources = await listByAssetFolder(cloudName, auth, folder);
+    for (const resource of resources) {
       addResource(map, cloudName, departamento, resource);
     }
   }
@@ -319,30 +277,30 @@ async function listCloudinary(): Promise<CloudinaryCatalog> {
 }
 
 /**
- * The Cloudinary catalog for this request/instance.
+ * The Cloudinary catalog for this render.
  *
- * `cache()` dedupes it within one render pass (it is consulted for every product
- * and every variant lookup), and the module-level TTL keeps a warm serverless
- * instance from re-listing on each regeneration. Always resolves — never throws.
+ * `cache()` dedupes it within one render pass (it's consulted for every product
+ * and variant); the shared Data Cache on each Admin GET dedupes the actual
+ * network calls across the whole site (see adminGet). Always resolves — never
+ * throws:
+ *  - success → the freshly built map; if non-empty it also becomes last-good.
+ *  - failure (any thrown error from listCloudinary) → the last-good map if we
+ *    ever built one, else empty. ONE concise warning.
  */
 export const getCloudinaryCatalog = cache(
   async (): Promise<CloudinaryCatalog> => {
-    const now = Date.now();
-    if (memo && now - memo.at < TTL_MS) return memo.map;
-
     try {
       const map = await listCloudinary();
-      memo = { at: now, map };
+      // Only a real, non-empty result is worth remembering as "good". An empty
+      // result (no creds, or every folder 404s) must never overwrite last-good.
+      if (map.size > 0) lastGoodCatalog = map;
       return map;
     } catch (error) {
-      // ONE concise warning; cache the empty result so a broken/unreachable
-      // Cloudinary doesn't get hammered (and doesn't spam the logs) for a while.
       console.warn(
-        "[cloudinary] listing failed — serving repo images instead:",
+        "[cloudinary] listing failed — keeping last-good images:",
         error instanceof Error ? error.message : error,
       );
-      memo = { at: now, map: EMPTY };
-      return EMPTY;
+      return lastGoodCatalog ?? EMPTY;
     }
   },
 );
