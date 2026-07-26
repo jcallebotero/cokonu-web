@@ -164,8 +164,13 @@ export function Destacados({
           transition={{ duration: 0.28, ease: "easeOut" }}
           className="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4"
         >
-          {products.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+          {products.map((product, index) => (
+            // Only the first card gets the LCP priority hint; the rest stay lazy.
+            <ProductCard
+              key={product.slug}
+              product={product}
+              priority={index === 0}
+            />
           ))}
         </motion.div>
       </div>

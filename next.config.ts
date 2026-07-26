@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
     DEPLOY_VERSION: deployVersion(),
   },
   images: {
+    // Serve AVIF first, then WebP, then the original — a DELIVERY-FORMAT change
+    // only. next/image negotiates per request; nothing about the image src or the
+    // resolution logic (lib/productImage.ts) changes.
+    formats: ["image/avif", "image/webp"],
+    // Optimized derivatives are safe to cache for 30 days: product photos only
+    // change on deploy and are already busted by the ?v=<DEPLOY_VERSION> query
+    // (unchanged). This just lets Netlify's image CDN keep derivatives longer.
+    minimumCacheTTL: 2592000,
     // next/image only optimizes LOCAL paths listed here; everything else is
     // blocked (400). Two prefixes are in use:
     //  - /brand/**    brand assets + mega-menu category icons; never a query.

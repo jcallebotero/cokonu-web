@@ -29,10 +29,18 @@ export function ProductCard({
   product,
   flavorLabels,
   compactOnMobile = false,
+  priority = false,
+  sizes,
 }: {
   product: Product;
   flavorLabels?: string[];
   compactOnMobile?: boolean;
+  // LCP hint for the FIRST card of an above-the-fold grid only; every other card
+  // stays lazy. Off by default so all existing call sites are unchanged.
+  priority?: boolean;
+  // Override the image `sizes` at a specific call site (e.g. the tiny search
+  // dropdown). Undefined → ProductImage keeps its default grid `sizes`.
+  sizes?: string;
 }) {
   const { addItem } = useCart();
   // Up to 4 flavor chips in a single row; a "+N" chip stands in for the rest.
@@ -52,6 +60,8 @@ export function ProductCard({
         <ProductImage
           src={product.imageSrc}
           alt={product.name}
+          priority={priority}
+          sizes={sizes}
           className="transition-transform duration-300 group-hover:scale-105"
         />
         {outOfStock && (

@@ -187,7 +187,14 @@ export function SearchPanel({
                       cards in the row share height and their buttons line up. */}
                   <div className="grid grid-cols-4 gap-2 sm:gap-4">
                     {results.items.map((p) => (
-                      <ProductCard key={p.slug} product={p} compactOnMobile />
+                      // Dropdown thumbs render ~80px; tell next/image so it
+                      // fetches a tiny derivative instead of the grid's ~50vw.
+                      <ProductCard
+                        key={p.slug}
+                        product={p}
+                        compactOnMobile
+                        sizes="96px"
+                      />
                     ))}
                   </div>
                 </>

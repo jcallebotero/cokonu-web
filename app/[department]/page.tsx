@@ -63,7 +63,7 @@ export default async function DepartmentPage({
               state on the dedicated category page. */}
           {sections
             .filter(({ products }) => products.length > 0)
-            .map(({ category, products }) => (
+            .map(({ category, products }, index) => (
             <section key={category.slug}>
               <div className="mb-5 flex items-baseline justify-between gap-4">
                 <h2 className="font-display text-xl text-ink sm:text-2xl">
@@ -81,7 +81,10 @@ export default async function DepartmentPage({
                   Ver todo
                 </Link>
               </div>
-              <ProductGrid products={products} />
+              {/* Only the first (above-the-fold) section prioritizes its LCP
+                  image; later sections render no priority image, so we don't
+                  eagerly download sections the visitor may never scroll to. */}
+              <ProductGrid products={products} allowPriority={index === 0} />
             </section>
           ))}
         </div>

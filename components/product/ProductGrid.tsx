@@ -13,9 +13,16 @@ import type { Product } from "@/types/product";
 export function ProductGrid({
   products,
   flavorLabelsBySlug,
+  allowPriority = true,
 }: {
   products: Product[];
   flavorLabelsBySlug?: Record<string, string[]>;
+  // Whether this grid's first card may carry the LCP `priority` hint. Defaults
+  // true (single-grid pages: category / subcategory / search / home). The
+  // department landing page renders one grid PER category section and passes
+  // false for every section after the first, so the page keeps exactly ONE
+  // priority image instead of eagerly loading below-the-fold sections.
+  allowPriority?: boolean;
 }) {
   if (products.length === 0) {
     return (
@@ -30,12 +37,16 @@ export function ProductGrid({
 
   return (
     <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {products.map((product) => (
+      {products.map((product, index) => (
         // Slug is unique across the whole catalog (department + code identity).
         <ProductCard
           key={product.slug}
           product={product}
           flavorLabels={flavorLabelsBySlug?.[product.slug]}
+          // Only the first card is the above-the-fold LCP → priority; the rest
+          // stay lazy (ProductImage's default). Suppressed entirely when the
+          // caller opts out (allowPriority=false).
+          priority={allowPriority && index === 0}
         />
       ))}
     </div>
