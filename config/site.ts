@@ -20,6 +20,13 @@ export const siteConfig = {
   city: "Medellín, Colombia",
   /** Alias kept for existing call sites. */
   location: "Medellín, Colombia",
+  /**
+   * Full physical address — single source of truth. Also serves as the
+   * judicial-notification address (Ley 1480 de 2011, art. 50 lit. a). Used in
+   * the footer identity line and the Términos / Privacidad legal pages.
+   */
+  address:
+    "Central mayorista de Antioquia, Itagüí, bloque 13 local 77 y 78, Medellín, Colombia",
 } as const;
 
 /**

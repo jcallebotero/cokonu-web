@@ -5,6 +5,7 @@ import {
   MailLink,
   WaLink,
 } from "@/components/legal/LegalPage";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = { title: "Términos y Condiciones" };
 
@@ -16,6 +17,9 @@ export default function TerminosPage() {
           Este sitio es operado por Cokonu — Confitería y Papelería, Sergio
           Ignacio Cano Velásquez, NIT 98538341, domiciliado en Medellín,
           Colombia. Contacto: <WaLink /> · <MailLink />.
+        </p>
+        <p>
+          Dirección para notificaciones judiciales: {siteConfig.address}.
         </p>
       </LegalSection>
 
@@ -35,9 +39,22 @@ export default function TerminosPage() {
           momento de la cotización por WhatsApp. Los precios pueden variar según
           la cantidad (precios por mayor).
         </p>
+        <p>
+          Los precios mostrados están expresados en pesos colombianos (COP) e
+          incluyen IVA.
+        </p>
       </LegalSection>
 
-      <LegalSection title="4. Proceso de cotización">
+      <LegalSection title="4. Imágenes ilustrativas">
+        <p>
+          Las imágenes publicadas en el catálogo tienen fines ilustrativos. La
+          presentación, empaque, diseño, colores o características visuales de
+          algunos productos pueden variar según disponibilidad del fabricante,
+          sin que ello afecte la calidad o funcionalidad del producto.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="5. Proceso de cotización">
         <p>
           El usuario selecciona productos y cantidades, y al finalizar es
           dirigido a WhatsApp con el resumen de su pedido. La cotización no
@@ -46,7 +63,7 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Uso del sitio">
+      <LegalSection title="6. Uso del sitio">
         <p>
           El usuario se compromete a usar el sitio de forma lícita y a no
           afectar su funcionamiento. El contenido, marca, logos e imágenes son
@@ -54,14 +71,14 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Limitación de responsabilidad">
+      <LegalSection title="7. Limitación de responsabilidad">
         <p>
           Cokonu procura que la información sea correcta, pero no garantiza que
           esté libre de errores; imágenes y presentaciones son ilustrativas.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Ley aplicable">
+      <LegalSection title="8. Ley aplicable">
         <p>
           Estos términos se rigen por las leyes de la República de Colombia.
           Para controversias aplican los jueces y tribunales competentes en
@@ -69,7 +86,7 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Contacto">
+      <LegalSection title="9. Contacto">
         <p>
           <MailLink /> · WhatsApp <WaLink />.
         </p>

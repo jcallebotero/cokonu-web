@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { departments } from "@/config/navigation";
 import { siteConfig, whatsappLink } from "@/config/site";
+import { COKONU_EMAIL, COKONU_PHONE } from "@/components/legal/LegalPage";
 
 /**
  * Site footer.
@@ -24,26 +25,14 @@ export function Footer() {
     <footer className="border-t border-line bg-bg-soft">
       <div className="w-full px-4 pb-6 pt-8 sm:px-6 sm:pt-10 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Newsletter signup — placeholder UI, no backend. */}
+          {/* Brand blurb + social. (A former newsletter signup form was removed
+              — it had no backend and collected nothing, so an email field that
+              appeared to collect data was a compliance risk.) */}
           <div className="sm:col-span-2 lg:col-span-2">
-            <h3 className="font-display text-sm text-ink">Suscríbete</h3>
+            <h3 className="font-display text-sm text-ink">{siteConfig.name}</h3>
             <p className="mt-1.5 max-w-xs font-meta text-xs text-ink-soft">
-              Novedades, lanzamientos y promociones de Cokonu en tu correo.
+              {siteConfig.description}
             </p>
-            <div className="mt-3 flex max-w-xs">
-              <input
-                type="email"
-                placeholder="Tu correo electrónico"
-                aria-label="Correo electrónico"
-                className="w-full min-w-0 border border-line bg-surface px-2.5 py-1.5 text-xs text-ink outline-none placeholder:text-ink-soft focus:border-ink"
-              />
-              <button
-                type="button"
-                className="shrink-0 bg-ink px-3 text-xs font-medium text-surface transition-colors hover:bg-green-dark"
-              >
-                Enviar
-              </button>
-            </div>
 
             {/* Social icons — custom PNGs (used as-is, not recolored). */}
             <div className="mt-4 flex items-center gap-3">
@@ -154,10 +143,17 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Business identity line. */}
-        <p className="mt-8 font-meta text-[10px] text-ink-soft">
-          {siteConfig.storeName} · NIT: 98538341 · {siteConfig.city}
-        </p>
+        {/* Business identity — Ley 1480 de 2011, art. 50 lit. a) requires the
+            identity to be available at all times: name, NIT, address (also for
+            judicial notifications), phone and email. Wraps to two lines on
+            mobile; values come from config/site.ts + LegalPage constants. */}
+        <div className="mt-8 space-y-0.5 font-meta text-[10px] leading-relaxed text-ink-soft">
+          <p>{siteConfig.storeName} · NIT: 98538341</p>
+          <p>{siteConfig.address}</p>
+          <p>
+            Tel: {COKONU_PHONE} · {COKONU_EMAIL}
+          </p>
+        </div>
       </div>
 
       {/* Hero wordmark spanning the full width. The fluid vw size is tuned so

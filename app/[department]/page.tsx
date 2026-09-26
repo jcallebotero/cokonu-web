@@ -6,6 +6,7 @@ import {
   getProductsByDepartment,
   getProductsByCategory,
 } from "@/lib/catalog";
+import { getFlavorLabels } from "@/lib/productVariants";
 import { PageHeading } from "@/components/layout/PageHeading";
 import { ProductGrid } from "@/components/product/ProductGrid";
 
@@ -36,6 +37,17 @@ export default async function DepartmentPage({
   if (!dept) notFound();
 
   const all = await getProductsByDepartment(department);
+
+  // Flavor chips: use the SAME data path as the category page
+  // (app/[department]/[category]/page.tsx) so the two pages can't drift apart —
+  // discover photo-derived flavor variants per product and pass them down.
+  // Built once over the whole department and shared by every section
+  // (ProductGrid indexes by slug); only products WITH flavors get an entry.
+  const flavorLabelsBySlug: Record<string, string[]> = {};
+  for (const p of all) {
+    const labels = getFlavorLabels(p.department, p.code);
+    if (labels.length > 0) flavorLabelsBySlug[p.slug] = labels;
+  }
 
   // One section per category, each with its products. The heading links to
   // the dedicated category page.
@@ -84,7 +96,11 @@ export default async function DepartmentPage({
               {/* Only the first (above-the-fold) section prioritizes its LCP
                   image; later sections render no priority image, so we don't
                   eagerly download sections the visitor may never scroll to. */}
-              <ProductGrid products={products} allowPriority={index === 0} />
+              <ProductGrid
+                products={products}
+                flavorLabelsBySlug={flavorLabelsBySlug}
+                allowPriority={index === 0}
+              />
             </section>
           ))}
         </div>
